@@ -52,7 +52,7 @@ read read
 {sys_funct}             SAVE_TOKEN; return TSYS_FUNCT;
 
 
-[a-zA-Z_][a-zA-Z0-9_]*  SAVE_TOKEN; return TIDENTIFIER;
+[a-zA-Z_][a-zA-Z0-9_]*  SAVE_TOKEN; return TNAME;
 [0-9]+                  SAVE_TOKEN; return TINTEGER;
 [0-9]+\.[0-9]*          SAVE_TOKEN; return TREAL;
 \'.\'                   SAVE_TOKEN; return TCHAR;
@@ -66,10 +66,10 @@ read read
 ">"                     return TOKEN(TGT);
 "<"                     return TOKEN(TLT);
 
-"("                     return TOKEN(TLPAREN);
-")"                     return TOKEN(TRPAREN);
-"["                     return TOKEN(TLBRACE);
-"]"                     return TOKEN(TRBRACE);
+"("                     return TOKEN(TLP);
+")"                     return TOKEN(TRP);
+"["                     return TOKEN(TLB);
+"]"                     return TOKEN(TRB);
 
 ","                     return TOKEN(TCOMMA);
 ".."                    return TOKEN(TDOTDOT);
