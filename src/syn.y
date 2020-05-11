@@ -2,6 +2,7 @@
     #include<cstdio>
     #include<cstdlib>
     #include<string>
+    #include"ast.h"
 
     extern int yylex();
     void yyerror(const char *s) { 
@@ -24,18 +25,11 @@ program:
     ;
 
 program_head: 
-    TPROGRAM  id  TSEMI{
+    TPROGRAM  TNAME  TSEMI{
         //TODO 
     }
     ;
 
-id: 
-    TNAME {}
-|   TSYS_CON {}
-|   TSYS_FUNCT {}
-|   TSYS_PROC {}
-|   TSYS_TYPE {}
-;
 
 routine: 
     routine_head  routine_body {
@@ -130,8 +124,8 @@ field_decl:
 ;
 
 name_list:
-    name_list  TCOMMA  id  {}
-|   id {}
+    name_list  TCOMMA  TNAME  {}
+|   TNAME {}
 ;
 
 var_part:
@@ -226,14 +220,14 @@ non_label_stmt:
 ;
 
 assign_stmt:
-    id  TASSIGN  expression
-|   id TLB expression TRB TASSIGN expression
-|   id  TDOT  id  TASSIGN  expression
+    TNAME  TASSIGN  expression
+|   TNAME TLB expression TRB TASSIGN expression
+|   TNAME  TDOT  TNAME  TASSIGN  expression
 ;
 
 proc_stmt:
-    id
-|   id  TLP  args_list  TRP
+    TNAME
+|   TNAME  TLP  args_list  TRP
 |   TSYS_PROC
 |   TSYS_PROC  TLP  expression_list  TRP
 |   TREAD  TLP  factor  TRP
@@ -257,7 +251,7 @@ while_stmt:
 ;
 
 for_stmt:
-    TFOR  id  TASSIGN  expression  direction  expression  TDO stmt
+    TFOR  TNAME  TASSIGN  expression  direction  expression  TDO stmt
 ;
 
 direction:
@@ -276,7 +270,7 @@ case_expr_list:
 
 case_expr:
     const_value  TCOLON  stmt  TSEMI
-|   id  TCOLON  stmt  TSEMI
+|   TNAME  TCOLON  stmt  TSEMI
 ;
 
 goto_stmt:
@@ -323,7 +317,7 @@ factor:
 |   TNOT  factor  
 |   TMINUS  factor  
 |   TID  TLB  expression  TRB
-|   id  TDOT  id
+|   TNAME  TDOT  TNAME
 ;
 
 args_list:
