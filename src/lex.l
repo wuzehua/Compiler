@@ -1,4 +1,5 @@
 %{
+    #include<iostream>
     #include<string>
 
     #define SAVE_TOKEN  yylval.string = new std::string(yytext, yyleng)
@@ -7,80 +8,62 @@
 
 %option noyywrap
 
-keyword and|array|begin|case|const|div|do|downto|else|end|for|function|goto|if|in|mod|not|of|or|packed|procedure|program|record|repeat|set|then|to|type|until|var|while
-sys_con false|true|maxint
-sys_funct abs|chr|odd|ord|pred|sqr|sqrt|succ
-sys_proc write|writeln
-sys_type boolean|char|integer|real
-read read
+integer [0-9]+
+real [0-9]+\.[0-9]*
+charconst \'.\'
+id [a-zA-Z_][a-zA-Z0-9_]*
 
 %%
-[ \t\n]                 ;
+[ \t\n]     ;
 
-"and"                   return TOKEN(TAND);
-"array"                 return TOKEN(TARRAY);
-"begin"                 return TOKEN(TBEGIN);
-"case"                  return TOKEN(TCASE);
-"const"                 return TOKEN(TCONST);
-"do"                    return TOKEN(TDO);
-"downto"                return TOKEN(TDOWNTO);
-"else"                  return TOKEN(TELSE);
-"end"                   return TOKEN(TEND);
-"for"                   return TOKEN(TFOR);
-"function"              return TOKEN(TFUNCTION);
-"goto"                  return TOKEN(TGOTO);
-"if"                    return TOKEN(TIF);
-"not"                   return TOKEN(TNOT);
-"mod"                   return TOKEN(TMOD);
-"of"                    return TOKEN(TOF);
-"or"                    return TOKEN(TOR);
-"packed"                return TOKEN(TPACKED);
-"procedure"             return TOKEN(TPROCEDURE);
-"program"               return TOKEN(TPROGRAM);
-"record"                return TOKEN(TRECORD);
-"then"                  return TOKEN(TTHEN);
-"to"                    return TOKEN(TTO);
-"type"                  return TOKEN(TTYPE);
-"until"                 return TOKEN(TUNTIL);
-"var"                   return TOKEN(TVAR);
-"while"                 return TOKEN(TWHILE);
-"read"                  return TOKEN(TREAD);
+"int"       return TOKEN(INT);
+"char"      return TOKEN(CHAR);
+"bool"      return TOKEN(BOOL);
+"static"    return TOKEN(STATIC);
+"if"        return TOKEN(IF);
+"elif"      return TOKEN(ELIF);
+"then"      return TOKEN(THEN);
+"do"        return TOKEN(DO);
+"else"      return TOKEN(ELSE);
+"while"     return TOKEN(WHILE);
+"loop"      return TOKEN(LOOP);
+"forever"   return TOKEN(FOREVER);
+"return"    return TOKEN(RETURN);
+"break"     return TOKEN(BREAK);
+"and"       return TOKEN(AND);
+"or"        return TOKEN(OR);
+"not"       return TOKEN(NOT);
 
-{sys_type}              SAVE_TOKEN; return TSYS_TYPE;
-{sys_con}               SAVE_TOKEN; return TSYS_CON;
-{sys_proc}              SAVE_TOKEN; return TSYS_PROC;
-{sys_funct}             SAVE_TOKEN; return TSYS_FUNCT;
+{real}      SAVE_TOKEN;return REAL;
+{integer}   SAVE_TOKEN;return INTEGER;
+{charconst} SAVE_TOKEN;return CHARACTER;
+{id}        SAVE_TOKEN;return ID;
 
+"="         return TOKEN(ASSIGN);
+"=="        return TOKEN(EQUAL);
+"!="        return TOKEN(NEQUAL);
+"<="        return TOKEN(LE);
+">="        return TOKEN(GE);
+"<"         return TOKEN(LT);
+">"         return TOKEN(GT);
 
-[a-zA-Z_][a-zA-Z0-9_]*  SAVE_TOKEN; return TNAME;
-[0-9]+                  SAVE_TOKEN; return TINTEGER;
-[0-9]+\.[0-9]*          SAVE_TOKEN; return TREAL;
-\'.\'                   SAVE_TOKEN; return TCHAR;
+"+"         return TOKEN(PLUS);
+"-"         return TOKEN(MINUS);
+"*"         return TOKEN(MUL);
+"/"         return TOKEN(DIV);
 
+"("         return TOKEN(LPAR);
+")"         return TOKEN(RPAR);
+"["         return TOKEN(LBRACKET);
+"]"         return TOKEN(RBRACKET);
+"{"         return TOKEN(LBRACE);
+"}"         return TOKEN(RBRACE);
 
-"="                     return TOKEN(TEQUAL);
-":="                    return TOKEN(TASSIGN);
-"<>"                    return TOKEN(TCNE);
-">="                    return TOKEN(TGE);
-"<="                    return TOKEN(TLE);
-">"                     return TOKEN(TGT);
-"<"                     return TOKEN(TLT);
+";"         return TOKEN(SEMI);
+","         return TOKEN(COMMA);
+":"         return TOKEN(COLON);
 
-"("                     return TOKEN(TLP);
-")"                     return TOKEN(TRP);
-"["                     return TOKEN(TLB);
-"]"                     return TOKEN(TRB);
-
-","                     return TOKEN(TCOMMA);
-".."                    return TOKEN(TDOTDOT);
-"."                     return TOKEN(TDOT);
-":"                     return TOKEN(TCOLON);
-";"                     return TOKEN(TSEMI);
-
-"+"                     return TOKEN(TPLUS);
-"-"                     return TOKEN(TMINUS);
-"*"                     return TOKEN(TMUL);
-"/"                     return TOKEN(TDIV);
+.           printf("Unkown Token\n");
 
 
 

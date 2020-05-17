@@ -2,17 +2,18 @@
 #include<vector>
 #include<string>
 #include<llvm/IR/Value.h>
+#include<memory>
 
 
 class ExpressionNode;
-class IdentifierNode;
+class VariableDeclarationNode;
 class StatementNode;
 class CodeGenerationContext;
 
 typedef llvm::Value* ValuePtr;
-typedef std::vector<ExpressionNode*> ExpressionList;
-typedef std::vector<StatementNode*> StatementList;
-typedef std::vector<IdentifierNode*> IdentifierList;
+typedef std::vector<std::shared_ptr<ExpressionNode>> ExpressionList;
+typedef std::vector<std::shared_ptr<StatementNode>> StatementList;
+typedef std::vector<std::shared_ptr<VariableDeclarationNode>> VariableList;
 
 
 class ASTNode{
@@ -112,12 +113,31 @@ public:
 
 class FunctionDeclarationNode: public StatementNode{
 public:
+    const IdentifierNode& type;
+    const IdentifierNode& id;
+    VariableList args;
+    BlockNode& block;
+
+    FunctionDeclarationNode(const IdentifierNode& type, const IdentifierNode& id,
+                            const VariableList& args, BlockNode& block):
+                            type(type),id(id),args(args),block(block){}
 
     ValuePtr generateCode(CodeGenerationContext& context);
 };
 
-class ProcedureDeclarationNode: public StatementNode{
+class VariableDeclarationNode: public StatementNode{
 public:
+    const IdentifierNode& type;
+    IdentifierNode& id;
+    std::shared_ptr<ExpressionNode> assignmentExpr;
+
+    VariableDeclarationNode(const IdentifierNode& type, IdentifierNode& id):
+        type(type), id(id), assignmentExpr(nullptr) {}
+
+    VariableDeclarationNode(const IdentifierNode& type, IdentifierNode& id,
+                            std::shared_ptr<ExpressionNode>& expr):
+                            type(type), id(id), assignmentExpr(expr){}
+    
 
     ValuePtr generateCode(CodeGenerationContext& context);
 };

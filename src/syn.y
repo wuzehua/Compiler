@@ -4,6 +4,8 @@
     #include<string>
     #include"ast.h"
 
+    BlockNode* program;
+
     extern int yylex();
     void yyerror(const char *s) { 
         std::printf("Error: %s\n", s);
@@ -12,318 +14,159 @@
 %}
 
 %union {
-    std::string *string;
+    BlockNode* block;
+    ExpressionNode* expr;
+    StatementNode* stat;
+    IdentifierNode* id;
+    VariableDeclarationNode* var_decl;
+    ExpressionList* expr_list;
+    VariableList* var_list;
+    std::string* string;
     int token;
 }
 
-%%
-
-program: 
-    program_head  routine  TDOT {
-        //TODO 
-    }
-    ;
-
-program_head: 
-    TPROGRAM  TNAME  TSEMI{
-        //TODO 
-    }
-    ;
+%token <string> ID INTEGER CHARACTER REAL
 
 
-routine: 
-    routine_head  routine_body {
-        //TODO 
-    }
-    ;
-
-sub_routine: 
-    routine_head  routine_body {
-        //TODO 
-    }
-    ;
-
-routine_head: 
-    label_part  const_part  type_part  var_part  routine_part {
-        //TODO 
-    }
-    ;
-
-
-label_part: {
-    //label_part: ε
-    }
-    ;
-
-const_part:
-    TCONST  const_expr_list { 
-        //TODO
-    } 
-    |  
-    ;
-const_expr_list:
-    const_expr_list  TNAME  TEQUAL  const_value  TSEMI {
-        //TODO
-    }
-|   TNAME  TEQUAL  const_value  TSEMI {
-        //TODO
-    }
-    ;
-
-const_value:TINTEGER {}
-|  TREAL  {}
-|  TCHAR  {}
-|  TSYS_CON  {}
-;
-
-type_part:
-    TTYPE type_decl_list {}
-|
-;
-
-type_decl_list:
-    type_decl_list  type_definition {} 
-|   type_definition {}
-;
-
-type_definition:
-    TNAME  TEQUAL  type_decl  TSEMI {}
-;
-
-type_decl:
-    simple_type_decl {}  
-|   array_type_decl  {}
-|   record_type_decl {}
-;
-
-simple_type_decl:
-    TSYS_TYPE  {}
-|   TNAME  {}
-|   TLP  name_list  TRP {} 
-|   const_value  TDOTDOT  const_value {} 
-|   TMINUS  const_value  TDOTDOT  const_value {}
-|   TMINUS  const_value  TDOTDOT  TMINUS  const_value {}
-|   TNAME  TDOTDOT  TNAME {}
-;
-
-array_type_decl:
-    TARRAY  TLB  simple_type_decl  TRB  TOF  type_decl {}
-;
-
-record_type_decl:
-    TRECORD  field_decl_list  TEND {}
-;
-
-field_decl_list:
-    field_decl_list  field_decl  {}
-|   field_decl {}
-;
-
-field_decl:
-    name_list  TCOLON  type_decl  TSEMI {}
-;
-
-name_list:
-    name_list  TCOMMA  TNAME  {}
-|   TNAME {}
-;
-
-var_part:
-    TVAR  var_decl_list  {}
-|  {}
-;
-
-var_decl_list:  
-    var_decl_list  var_decl  {}
-|   var_decl {}
-;
-
-var_decl:  
-    name_list  TCOLON  type_decl  TSEMI {}
-;    
-
-routine_part:  
-    routine_part  function_decl  {}
-|   routine_part  procedure_decl {}
-|   function_decl  {}
-|   procedure_decl  {}
-|   {}
-;
-
-function_decl: 
-    function_head  TSEMI  sub_routine  TSEMI {}
-;
-
-function_head:  
-    TFUNCTION  TNAME  parameters  TCOLON  simple_type_decl {}
-;
-
-procedure_decl:  
-    procedure_head  TSEMI  sub_routine  TSEMI {}
-;    
-
-procedure_head:  
-    TPROCEDURE TNAME parameters {}
-;
-
-parameters:
-    TLP  para_decl_list  TRP  {}
-|  
-;
-
-para_decl_list:
-    para_decl_list  TSEMI  para_type_list 
-|   para_type_list
-;
-
-para_type_list:
-    var_para_list TCOLON  simple_type_decl  
-|   val_para_list TCOLON  simple_type_decl
-;
-
-var_para_list:
-    TVAR  name_list
-;
-
-val_para_list:
-    name_list
-;
-
-routine_body:
-    compound_stmt
-;
-
-compound_stmt:
-    TBEGIN  stmt_list  TEND
-;
-
-stmt_list:
-    stmt_list  stmt  TSEMI  
-|  
-;
-
-stmt:
-    TINTEGER  TCOLON  non_label_stmt  
-|   non_label_stmt
-;
-
-non_label_stmt:
-    assign_stmt 
-|   proc_stmt 
-|   compound_stmt 
-|   if_stmt 
-|   repeat_stmt 
-|   while_stmt 
-|   for_stmt 
-|   case_stmt 
-|   goto_stmt
-;
-
-assign_stmt:
-    TNAME  TASSIGN  expression
-|   TNAME TLB expression TRB TASSIGN expression
-|   TNAME  TDOT  TNAME  TASSIGN  expression
-;
-
-proc_stmt:
-    TNAME
-|   TNAME  TLP  args_list  TRP
-|   TSYS_PROC
-|   TSYS_PROC  TLP  expression_list  TRP
-|   TREAD  TLP  factor  TRP
-;
-
-if_stmt:
-    TIF  expression  TTHEN  stmt  else_clause
-;
-
-else_clause:
-    TELSE stmt 
-|  
-;
-
-repeat_stmt:
-    TREPEAT  stmt_list  TUNTIL  expression
-;
-
-while_stmt:
-    TWHILE  expression  TDO stmt
-;
-
-for_stmt:
-    TFOR  TNAME  TASSIGN  expression  direction  expression  TDO stmt
-;
-
-direction:
-    TTO 
-|   TDOWNTO
-;
-
-case_stmt:
-    TCASE expression TOF case_expr_list  TEND
-;
-
-case_expr_list:
-    case_expr_list  case_expr  
-|   case_expr
-;
-
-case_expr:
-    const_value  TCOLON  stmt  TSEMI
-|   TNAME  TCOLON  stmt  TSEMI
-;
-
-goto_stmt:
-    TGOTO  TINTEGER
-;
-
-expression_list:
-    expression_list  TCOMMA  expression  
-|   expression
-;
-
-expression:
-    expression  TGE  expr  
-|   expression  TGT  expr  
-|   expression  TLE  expr
-|   expression  TLT  expr  
-|   expression  TEQUAL  expr  
-|   expression  TUNEQUAL  expr  
-|   expr
-;
-
-expr:
-    expr  TPLUS  term  
-|   expr  TMINUS  term  
-|   expr  TOR  term  
-|   term
-;
-
-term:
-    term  TMUL  factor  
-|   term  TDIV  factor  
-|   term  TMOD  factor 
-|   term  TAND  factor  
-|   factor
-;
-
-factor:
-    TNAME  
-|   TNAME  TLP  args_list  TRP  
-|   TSYS_FUNCT 
-|   TSYS_FUNCT  TLP  args_list  TRP  
-|   const_value  
-|   TLP  expression  TRP
-|   TNOT  factor  
-|   TMINUS  factor  
-|   TID  TLB  expression  TRB
-|   TNAME  TDOT  TNAME
-;
-
-args_list:
-    args_list  TCOMMA  expression  
-|   expression
-;
+%start program
 
 %%
 
+ program: declarationList;
+ 
+ declarationList: declarationList declaration 
+    | declaration;
+
+declaration: varDeclaration 
+    | funDeclaration;
+
+varDeclaration: typeSpecifier varDeclList;
+
+scopedVarDeclaration: scopedTypeSpecifier varDeclList;
+
+varDeclList: varDeclList COMMA varDeclInitialize 
+    | varDeclInitialize;
+
+varDeclInitialize: varDeclId 
+    | varDeclId COLON simpleExpression;
+
+varDeclId: ID 
+    | ID [ INTEGER ];
+
+scopedTypeSpecifier: STATIC typeSpecifier 
+    | typeSpecifier;
+    
+typeSpecifier: INT | BOOL | CHAR;
+
+funDeclaration: typeSpecifier ID LPAR params RPAR statement 
+    | ID LPAR params RPAR statement;
+    
+params:  
+    | paramList; 
+
+paramList: paramList SEMI paramTypeList 
+    | paramTypeList;
+    
+paramTypeList: typeSpecifier paramIdList;
+
+paramIdList: paramIdList COMMA paramId 
+    | paramId;
+    
+paramId: ID 
+    | ID LBRACKET RBRACKET;
+    
+statement: expressionStmt 
+    | compoundStmt 
+    | selectionStmt 
+    | iterationStmt 
+    | returnStmt
+    | breakStmt;
+    
+expressionStmt: expression SEMI 
+    | SEMI;
+    
+compoundStmt: LBRACE localDeclarations statementList RBRACE;
+
+localDeclarations:  
+    | localDeclarations scopedVarDeclaration;
+    
+statementList:  
+    | statementList statement;
+
+elsifList:  
+    | elsifList ELIF simpleExpression THEN statement;
+
+selectionStmt: IF simpleExpression THEN statement elsifList 
+    | IF simpleExpression THEN statement elsifList ELSE statement;
+    
+iterationRange: ID = simpleExpression .. simpleExpression 
+    | ID = simpleExpression ..simpleExpression : simpleExpression;
+    
+iterationStmt: WHILE simpleExpression DO statement 
+    | LOOP FOREVER statement 
+    | loopiterationRange DO statement;
+    
+returnStmt: RETURN SEMI 
+    | RETURN expression SEMI;
+    
+breakStmt: BREAK SEMI;
+
+expression: mutable ASSIGN expression 
+    // | mutable += expression 
+    // | mutable −= expression
+    // | mutable ∗= expression 
+    // | mutable /= expression 
+    // | mutable ++ 
+    // | mutable −−
+    | simpleExpression;
+    
+simpleExpression: simpleExpression OR andExpression 
+    | andExpression;
+    
+andExpression: andExpression AND unaryRelExpression 
+    | unaryRelExpression;
+    
+unaryRelExpression: NOT unaryRelExpression 
+    | relExpression;
+    
+relExpression: sumExpression relop sumExpression 
+    | sumExpression;
+    
+relop: LE | LT | GT | GE | EQUAL | NEQUAL;
+
+sumExpression: sumExpression sumop mulExpression 
+    | mulExpression;
+    
+sumop: PLUS | MINUS;
+
+mulExpression: mulExpression mulop unaryExpression 
+    | unaryExpression;
+    
+mulop: MUL | DIV;
+
+unaryExpression: unaryop unaryExpression 
+    | factor;
+    
+unaryop: MINUS;
+
+factor: immutable 
+    | mutable;
+    
+mutable: ID 
+    | mutable LBRACKET expression RBRACKET;
+    
+immutable: LPAR expression RPAR 
+    | call 
+    | constant;
+    
+call: ID LPAR args RPAR;
+
+args:  
+    | argList;
+
+argList: argList COMMA expression 
+    | expression;
+    
+constant: INTEGER | CHARACTER | REAL | FALSE | TRUE;
+
+%%
