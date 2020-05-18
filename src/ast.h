@@ -74,7 +74,14 @@ public:
     std::string name;
     bool isType = false;
     bool isArray = false;
+
+    std::shared_ptr<ExpressionList> arraySize = nullptr;
+
     IdentifierNode(const std::string& name): name(name){}
+
+    IdentifierNode(const std::string& name, std::shared_ptr<ExpressionList>& size):
+                name(name), arraySize(size){}
+
     ValuePtr generateCode(CodeGenerationContext& context);
 
     void debugPrint(std::string prefix) const{

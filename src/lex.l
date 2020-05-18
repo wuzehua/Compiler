@@ -16,9 +16,9 @@ id [a-zA-Z_][a-zA-Z0-9_]*
 %%
 [ \t\n]     ;
 
-"int"       return TOKEN(INT);
-"char"      return TOKEN(CHAR);
-"bool"      return TOKEN(BOOL);
+"int"       SAVE_TOKEN; return INT;
+"char"      SAVE_TOKEN; return CHAR;
+"bool"      SAVE_TOKEN; return BOOL;
 "static"    return TOKEN(STATIC);
 "if"        return TOKEN(IF);
 "elif"      return TOKEN(ELIF);

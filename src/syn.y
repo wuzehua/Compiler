@@ -2,6 +2,7 @@
     #include<cstdio>
     #include<cstdlib>
     #include<string>
+    #include<memory>
     #include"ast.h"
 
     BlockNode* program;
@@ -28,35 +29,52 @@
 %token <string> ID INTEGER CHARACTER REAL
 
 
+%type <block> program declarationList
+%type <stat> declaration varDeclaration funDeclaration
+
+
+
+%left PLUS MINUS
+%left MUL DIV
+
 %start program
 
 %%
 
- program: declarationList;
+ program: declarationList { program = $1; };
  
- declarationList: declarationList declaration 
-    | declaration;
+ declarationList: declarationList declaration { $1->statements.emplace_back(shared_ptr<StatementNode>($2));}
+    | declaration { $$ = new BlockNode(); 
+                    $$->statements.emplace_back(shared_ptr<StatementNode>($1));
+                }
+    ;
 
-declaration: varDeclaration 
-    | funDeclaration;
+declaration: varDeclaration { $$ = $1; }
+    | funDeclaration { $$ = $1; }
+    ;
 
-varDeclaration: typeSpecifier varDeclList;
+varDeclaration: typeSpecifier varDeclInitialize {}
+            |   typeSpecifier ID LBRACKET INTEGER RBRACKET {}
+            |   ;
 
-scopedVarDeclaration: scopedTypeSpecifier varDeclList;
+typeSpecifier: INT { $$ = new IdentifierNode(*$1); $$->isType = true; delete $1; } 
+            | BOOL { $$ = new IdentifierNode(*$1); $$->isType = true; delete $1; }
+            | CHAR { $$ = new IdentifierNode(*$1); $$->isType = true; delete $1; }
+            ;
 
-varDeclList: varDeclList COMMA varDeclInitialize 
-    | varDeclInitialize;
+scopedVarDeclaration: scopedTypeSpecifier varDeclInitialize;
 
-varDeclInitialize: varDeclId 
-    | varDeclId COLON simpleExpression;
+localDeclarations:  
+    | localDeclarations scopedVarDeclaration;
 
-varDeclId: ID 
-    | ID [ INTEGER ];
+
+varDeclInitialize: ID 
+    | ID COLON simpleExpression;
+
 
 scopedTypeSpecifier: STATIC typeSpecifier 
     | typeSpecifier;
     
-typeSpecifier: INT | BOOL | CHAR;
 
 funDeclaration: typeSpecifier ID LPAR params RPAR statement 
     | ID LPAR params RPAR statement;
@@ -86,9 +104,6 @@ expressionStmt: expression SEMI
     | SEMI;
     
 compoundStmt: LBRACE localDeclarations statementList RBRACE;
-
-localDeclarations:  
-    | localDeclarations scopedVarDeclaration;
     
 statementList:  
     | statementList statement;
