@@ -152,6 +152,26 @@ public:
 
 };
 
+
+class ArrayIndexNode:public ExpressionNode{
+public:
+    IdentifierNode& id;
+    ExpressionNode& index;
+
+    ArrayIndexNode(IdentifierNode& id, ExpressionNode& index):
+                    id(id), index(index){}
+
+    ValuePtr generateCode(CodeGenerationContext& context);
+
+    void debugPrint(std::string prefix) const{
+        std::cout<<prefix<<"AssignmentNode\n";
+        std::cout<<prefix<<"\tid:\n";
+        id.debugPrint(prefix + "\t\t");
+        std::cout<<prefix<<"\tindex:\n";
+        index.debugPrint(prefix + "\t\t");
+    }
+};
+
 class BlockNode: public StatementNode{
 public:
     StatementList statements;
@@ -244,3 +264,4 @@ public:
         }
     }
 };
+

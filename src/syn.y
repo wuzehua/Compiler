@@ -26,7 +26,13 @@
     int token;
 }
 
-%token <string> ID INTEGER CHARACTER REAL
+%token <string> ID INTEGER CHARACTER REAL INT CHAR BOOL DOUBLE
+%token <token> TRUE FALSE 
+%token <token> EQUAL GE GT LE LT NEQUAL ASSIGN
+%token <token> LBRACE RBRACE LBRACKET RBRACKET LPAR RPAR COMMA SEMI DOT COLON
+%token <token> WHILE DO LOOP FOREVER 
+%token <token> PLUS MINUS MUL DIV NOT AND OR
+%token <token> IF ELIF ELSE WHILE RETURN STATIC BREAK THEN
 
 
 %type <block> program declarationList

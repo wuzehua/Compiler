@@ -19,6 +19,9 @@ id [a-zA-Z_][a-zA-Z0-9_]*
 "int"       SAVE_TOKEN; return INT;
 "char"      SAVE_TOKEN; return CHAR;
 "bool"      SAVE_TOKEN; return BOOL;
+"double"    SAVE_TOKEN; return DOUBLE;
+"true"      return TOKEN(TRUE);
+"false"     return TOKEN(FLASE);
 "static"    return TOKEN(STATIC);
 "if"        return TOKEN(IF);
 "elif"      return TOKEN(ELIF);
@@ -62,6 +65,7 @@ id [a-zA-Z_][a-zA-Z0-9_]*
 ";"         return TOKEN(SEMI);
 ","         return TOKEN(COMMA);
 ":"         return TOKEN(COLON);
+"."         return TOKEN(DOT);
 
 .           printf("Unkown Token\n");
 
