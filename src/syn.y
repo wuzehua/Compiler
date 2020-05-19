@@ -5,6 +5,9 @@
     #include<memory>
     #include"ast.h"
 
+    using std::shared_ptr;
+    using std::make_shared;
+
     BlockNode* program;
 
     extern int yylex();
@@ -59,31 +62,44 @@ declaration: varDeclaration { $$ = $1; }
     | funDeclaration { $$ = $1; }
     ;
 
-varDeclaration: typeSpecifier varDeclInitialize {}
-            |   typeSpecifier ID LBRACKET INTEGER RBRACKET {}
-            |   ;
+identifier: ID { $$ = new IdentifierNode(*$1); delete $1;};
+
+statementList:  statement
+    | statementList statement;
+
+statement: expressionStmt 
+    | compoundStmt 
+    | selectionStmt 
+    | iterationStmt 
+    | returnStmt
+    | varDeclaration;
+
+varDeclaration: typeSpecifier identifier SEMI { 
+                    $$ = new VariableDeclarationNode($1, $2); 
+                    }
+            |   typeSpecifier identifier COLON simpleExpression SEMI{
+                    $$ = new VariableDeclarationNode($1, $2, $4);
+                }
+            |   typeSpecifier identifier LBRACKET INTEGER RBRACKET SEMI {
+                $1->isArray = true;
+                shared_ptr<ExpressionList> exprl = make_shared<ExpressionList>();
+                exprl->emplace_back(shared_ptr<ExpressionNode>($4));
+                $1->arraySize = exprl;
+                $$ = new VariableDeclarationNode($1, $2);
+            }
+            ;
 
 typeSpecifier: INT { $$ = new IdentifierNode(*$1); $$->isType = true; delete $1; } 
             | BOOL { $$ = new IdentifierNode(*$1); $$->isType = true; delete $1; }
             | CHAR { $$ = new IdentifierNode(*$1); $$->isType = true; delete $1; }
             ;
 
-scopedVarDeclaration: scopedTypeSpecifier varDeclInitialize;
+codeBlock: LBRACE RBRACE { $$ = new BlockNode();}
+        |  LBRACE statementList RBRACE { $$ = $2; }
+        ;    
 
-localDeclarations:  
-    | localDeclarations scopedVarDeclaration;
-
-
-varDeclInitialize: ID 
-    | ID COLON simpleExpression;
-
-
-scopedTypeSpecifier: STATIC typeSpecifier 
-    | typeSpecifier;
-    
-
-funDeclaration: typeSpecifier ID LPAR params RPAR statement 
-    | ID LPAR params RPAR statement;
+funDeclaration: typeSpecifier ID LPAR params RPAR codeBlock 
+    | ID LPAR params RPAR codeBlock;
     
 params:  
     | paramList; 
@@ -99,20 +115,13 @@ paramIdList: paramIdList COMMA paramId
 paramId: ID 
     | ID LBRACKET RBRACKET;
     
-statement: expressionStmt 
-    | compoundStmt 
-    | selectionStmt 
-    | iterationStmt 
-    | returnStmt
-    | breakStmt;
+
     
 expressionStmt: expression SEMI 
     | SEMI;
     
 compoundStmt: LBRACE localDeclarations statementList RBRACE;
-    
-statementList:  
-    | statementList statement;
+
 
 elsifList:  
     | elsifList ELIF simpleExpression THEN statement;
@@ -130,15 +139,8 @@ iterationStmt: WHILE simpleExpression DO statement
 returnStmt: RETURN SEMI 
     | RETURN expression SEMI;
     
-breakStmt: BREAK SEMI;
 
 expression: mutable ASSIGN expression 
-    // | mutable += expression 
-    // | mutable −= expression
-    // | mutable ∗= expression 
-    // | mutable /= expression 
-    // | mutable ++ 
-    // | mutable −−
     | simpleExpression;
     
 simpleExpression: simpleExpression OR andExpression 

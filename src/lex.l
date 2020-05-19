@@ -36,6 +36,7 @@ id [a-zA-Z_][a-zA-Z0-9_]*
 "and"       return TOKEN(AND);
 "or"        return TOKEN(OR);
 "not"       return TOKEN(NOT);
+"extern"    return TOKEN(EXTERN);
 
 {real}      SAVE_TOKEN;return REAL;
 {integer}   SAVE_TOKEN;return INTEGER;

@@ -1,3 +1,5 @@
+#pragma once
+
 #include<iostream>
 #include<vector>
 #include<string>
@@ -15,6 +17,8 @@ typedef std::vector<std::shared_ptr<ExpressionNode>> ExpressionList;
 typedef std::vector<std::shared_ptr<StatementNode>> StatementList;
 typedef std::vector<std::shared_ptr<VariableDeclarationNode>> VariableList;
 
+using std::shared_ptr;
+using std::make_shared;
 
 class ASTNode{
 public:
@@ -75,12 +79,14 @@ public:
     bool isType = false;
     bool isArray = false;
 
-    std::shared_ptr<ExpressionList> arraySize = nullptr;
+    shared_ptr<ExpressionList> arraySize = nullptr;
 
     IdentifierNode(const std::string& name): name(name){}
 
-    IdentifierNode(const std::string& name, std::shared_ptr<ExpressionList>& size):
-                name(name), arraySize(size){}
+    IdentifierNode(const std::string& name, ExpressionList*& size):
+                name(name){
+                    arraySize = shared_ptr<ExpressionList>(size);
+                }
 
     ValuePtr generateCode(CodeGenerationContext& context);
 
@@ -93,39 +99,43 @@ public:
 
 class BinaryOperatorNode: public ExpressionNode{
 public:
-    ExpressionNode& leftExpr;
-    ExpressionNode& rightExpr;
+    shared_ptr<ExpressionNode> leftExpr;
+    shared_ptr<ExpressionNode> rightExpr;
     int op;
     
-    BinaryOperatorNode(ExpressionNode& left, int& op, ExpressionNode& right):
-        leftExpr(left), op(op), rightExpr(right){}
+    BinaryOperatorNode(ExpressionNode*& left, int& op, ExpressionNode*& right):
+        op(op){
+            leftExpr = shared_ptr<ExpressionNode>(left);
+            rightExpr = shared_ptr<ExpressionNode>(right);
+        }
     
     ValuePtr generateCode(CodeGenerationContext& context);
 
     void debugPrint(std::string prefix) const{
         std::cout<<prefix<<"BinaryOperatorNode( op: "<<op<<")\n";
         std::cout<<prefix<<"\tLeftExpr:\n";
-        leftExpr.debugPrint(prefix + "\t\t");
+        leftExpr->debugPrint(prefix + "\t\t");
         std::cout<<prefix<<"\tRightExpr:\n";
-        rightExpr.debugPrint(prefix + "\t\t");
+        rightExpr->debugPrint(prefix + "\t\t");
     }
 };
 
 
 class MethodCallNode: public ExpressionNode{
 public:
-    const IdentifierNode& id;
+    const shared_ptr<IdentifierNode> id;
     ExpressionList args;
 
-    MethodCallNode(const IdentifierNode& id): id(id){}
-    MethodCallNode(const IdentifierNode& id, ExpressionList& args):id(id), args(args){}
+    MethodCallNode(IdentifierNode*& id): id(shared_ptr<IdentifierNode>(id)){}
+    MethodCallNode(IdentifierNode*& id, ExpressionList& args):id(shared_ptr<IdentifierNode>(id)), 
+                    args(args){}
 
     ValuePtr generateCode(CodeGenerationContext& context);
 
     void debugPrint(std::string prefix) const{
         std::cout<<prefix<<"MethodCallNode\n";
         std::cout<<prefix<<"\tid:\n";
-        id.debugPrint(prefix + "\t\t");
+        id->debugPrint(prefix + "\t\t");
         std::cout<<prefix<<"\targs:\n";
         for(auto& expr: args){
             expr->debugPrint(prefix + "\t\t");
@@ -135,19 +145,22 @@ public:
 
 class AssignmentNode: public ExpressionNode{
 public:
-    IdentifierNode& id;
-    ExpressionNode& expr;
+    shared_ptr<IdentifierNode> id;
+    shared_ptr<ExpressionNode> expr;
 
-    AssignmentNode(IdentifierNode& id, ExpressionNode& expr):id(id), expr(expr){}
+    AssignmentNode(IdentifierNode*& id, ExpressionNode*& expr){
+        this->id = shared_ptr<IdentifierNode>(id);
+        this->expr = shared_ptr<ExpressionNode>(expr);
+    }
 
     ValuePtr generateCode(CodeGenerationContext& context);
 
     void debugPrint(std::string prefix) const{
         std::cout<<prefix<<"AssignmentNode\n";
         std::cout<<prefix<<"\tid:\n";
-        id.debugPrint(prefix + "\t\t");
+        id->debugPrint(prefix + "\t\t");
         std::cout<<prefix<<"\texpr:\n";
-        expr.debugPrint(prefix + "\t\t");
+        expr->debugPrint(prefix + "\t\t");
     }
 
 };
@@ -155,20 +168,23 @@ public:
 
 class ArrayIndexNode:public ExpressionNode{
 public:
-    IdentifierNode& id;
-    ExpressionNode& index;
+    shared_ptr<IdentifierNode> id;
+    shared_ptr<ExpressionNode> index;
 
-    ArrayIndexNode(IdentifierNode& id, ExpressionNode& index):
-                    id(id), index(index){}
+    ArrayIndexNode(IdentifierNode*& id, ExpressionNode*& index)
+                    {
+                        this->id = shared_ptr<IdentifierNode>(id);
+                        this->index = shared_ptr<ExpressionNode>(index);
+                    }
 
     ValuePtr generateCode(CodeGenerationContext& context);
 
     void debugPrint(std::string prefix) const{
         std::cout<<prefix<<"AssignmentNode\n";
         std::cout<<prefix<<"\tid:\n";
-        id.debugPrint(prefix + "\t\t");
+        id->debugPrint(prefix + "\t\t");
         std::cout<<prefix<<"\tindex:\n";
-        index.debugPrint(prefix + "\t\t");
+        index->debugPrint(prefix + "\t\t");
     }
 };
 
@@ -190,29 +206,35 @@ public:
 
 class ExpressionStatementNode: public StatementNode{
 public:
-    ExpressionNode& expr;
-    ExpressionStatementNode(ExpressionNode& expr): expr(expr){}
+    shared_ptr<ExpressionNode> expr;
+    ExpressionStatementNode(ExpressionNode*& expr){
+        this->expr = shared_ptr<ExpressionNode>(expr);
+    }
 
     ValuePtr generateCode(CodeGenerationContext& context);
 
     void debugPrint(std::string prefix) const{
         std::cout<<prefix<<"ExpressionStatementNode\n";
         std::cout<<prefix<<"\texpr:\n";
-        expr.debugPrint(prefix + "\t\t");
+        expr->debugPrint(prefix + "\t\t");
     }
 
 };
 
 class FunctionDeclarationNode: public StatementNode{
 public:
-    const IdentifierNode& type;
-    const IdentifierNode& id;
+    const shared_ptr<IdentifierNode> type;
+    const shared_ptr<IdentifierNode> id;
     VariableList args;
-    BlockNode& block;
+    shared_ptr<BlockNode> block;
 
-    FunctionDeclarationNode(const IdentifierNode& type, const IdentifierNode& id,
-                            const VariableList& args, BlockNode& block):
-                            type(type),id(id),args(args),block(block){}
+    FunctionDeclarationNode(IdentifierNode*& type, IdentifierNode*& id,
+                            const VariableList& args, BlockNode*& block):
+                            type(shared_ptr<IdentifierNode>(type)),
+                            id(shared_ptr<IdentifierNode>(id)),
+                            args(args),
+                            block(shared_ptr<BlockNode>(block)){
+                            }
 
     ValuePtr generateCode(CodeGenerationContext& context);
 
@@ -220,10 +242,10 @@ public:
         std::cout<<prefix<<"FunctionDeclarationNode\n";
         
         std::cout<<prefix<<"\ttype:\n";
-        type.debugPrint(prefix + "\t\t");
+        type->debugPrint(prefix + "\t\t");
         
         std::cout<<prefix<<"\tid:\n";
-        id.debugPrint(prefix + "\t\t");
+        id->debugPrint(prefix + "\t\t");
         
         std::cout<<prefix<<"\targs:\n";
         for(auto& arg: args){
@@ -231,23 +253,27 @@ public:
         }
 
         std::cout<<prefix<<"\tblock:\n";
-        block.debugPrint(prefix + "\t\t");
+        block->debugPrint(prefix + "\t\t");
     }
 
 };
 
 class VariableDeclarationNode: public StatementNode{
 public:
-    const IdentifierNode& type;
-    IdentifierNode& id;
-    std::shared_ptr<ExpressionNode> assignmentExpr;
+    const shared_ptr<IdentifierNode> type;
+    shared_ptr<IdentifierNode> id;
+    shared_ptr<ExpressionNode> assignmentExpr; //Nullable
 
-    VariableDeclarationNode(const IdentifierNode& type, IdentifierNode& id):
-        type(type), id(id), assignmentExpr(nullptr) {}
+    VariableDeclarationNode(IdentifierNode*& type, IdentifierNode*& id):
+        type(shared_ptr<IdentifierNode>(type)), 
+        id(shared_ptr<IdentifierNode>(id)), 
+        assignmentExpr(nullptr) {}
 
-    VariableDeclarationNode(const IdentifierNode& type, IdentifierNode& id,
-                            std::shared_ptr<ExpressionNode>& expr):
-                            type(type), id(id), assignmentExpr(expr){}
+    VariableDeclarationNode(IdentifierNode*& type, IdentifierNode*& id,
+                            ExpressionNode*& expr):
+                            type(shared_ptr<IdentifierNode>(type)), 
+                            id(shared_ptr<IdentifierNode>(id)), 
+                            assignmentExpr(shared_ptr<ExpressionNode>(expr)){}
     
 
     ValuePtr generateCode(CodeGenerationContext& context);
@@ -255,9 +281,9 @@ public:
     void debugPrint(std::string prefix) const{
         std::cout<<prefix<<"VariableDeclarationNode\n";
         std::cout<<prefix<<"\ttype:\n";
-        type.debugPrint(prefix + "\t\t");
+        type->debugPrint(prefix + "\t\t");
         std::cout<<prefix<<"\tid:\n";
-        id.debugPrint(prefix + "\t\t");
+        id->debugPrint(prefix + "\t\t");
         if(assignmentExpr){
             std::cout<<prefix<<"\texpr:\n";
             assignmentExpr->debugPrint(prefix + "\t\t");
