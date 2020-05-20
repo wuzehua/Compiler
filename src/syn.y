@@ -40,6 +40,9 @@
 
 %type <block> program declarationList
 %type <stat> declaration varDeclaration funDeclaration
+%type <expr> constant mutable immutable
+%type <var_decl> paramType varDeclaration
+%type <id> typeSpecifier identifier
 
 
 
@@ -64,15 +67,9 @@ declaration: varDeclaration { $$ = $1; }
 
 identifier: ID { $$ = new IdentifierNode(*$1); delete $1;};
 
-statementList:  statement
-    | statementList statement;
-
-statement: expressionStmt 
-    | compoundStmt 
-    | selectionStmt 
-    | iterationStmt 
-    | returnStmt
-    | varDeclaration;
+statementList:  statement { $$ = new BlockNode(); $$->statements.emplace_back(shared_ptr<StatementNode>($1));}
+    | statementList statement {  $1->statements.emplace_back(shared_ptr<StatementNode>($2)); }
+    ;
 
 varDeclaration: typeSpecifier identifier SEMI { 
                     $$ = new VariableDeclarationNode($1, $2); 
@@ -92,45 +89,55 @@ varDeclaration: typeSpecifier identifier SEMI {
 typeSpecifier: INT { $$ = new IdentifierNode(*$1); $$->isType = true; delete $1; } 
             | BOOL { $$ = new IdentifierNode(*$1); $$->isType = true; delete $1; }
             | CHAR { $$ = new IdentifierNode(*$1); $$->isType = true; delete $1; }
+            | DOUBLE { $$ = new IdentifierNode(*$1); $$->isType = true; delete $1; }
             ;
 
 codeBlock: LBRACE RBRACE { $$ = new BlockNode();}
         |  LBRACE statementList RBRACE { $$ = $2; }
         ;    
 
-funDeclaration: typeSpecifier ID LPAR params RPAR codeBlock 
-    | ID LPAR params RPAR codeBlock;
+funDeclaration: typeSpecifier identifier LPAR params RPAR codeBlock { $$ = new FunctionDeclarationNode($1, $2, $4, $6); }
+    | identifier LPAR params RPAR codeBlock { $$ = new FunctionDeclarationNode(nullptr, $1, $3, $5); }
+    ;
     
-params:  
-    | paramList; 
+params:  { $$ = new VariableList(); }
+    | paramList { $$ = $1; }
+    ; 
 
-paramList: paramList SEMI paramTypeList 
-    | paramTypeList;
+paramList: paramList COMMA paramType { $1->emplace_back(shared_ptr<VariableDeclarationNode>($3)); }
+    | paramType { $$ = new VariableList(); $$->emplace_back(shared_ptr<VariableDeclarationNode>($1)); }
+    ;
     
-paramTypeList: typeSpecifier paramIdList;
+paramType: typeSpecifier identifier { $$ = new VariableDeclarationNode($1, $2); }
+    |   typeSpecifier identifier LBRACKET RBRACKET {
+            $1->isArray = true;
+            $$ = new VariableDeclarationNode($1, $2);
+        }
+    ;
 
-paramIdList: paramIdList COMMA paramId 
-    | paramId;
-    
-paramId: ID 
-    | ID LBRACKET RBRACKET;
-    
+statement: expressionStmt 
+    | selectionStmt 
+    | iterationStmt 
+    | returnStmt
+    | varDeclaration
+    | codeBlock
+    ;
 
+        
+expressionStmt: expression SEMI { $$ = $1; } 
+    | SEMI { $$ = nullptr; }
+    ;
     
-expressionStmt: expression SEMI 
-    | SEMI;
-    
-compoundStmt: LBRACE localDeclarations statementList RBRACE;
+selectionStmt: IF simpleExpression THEN codeBlock { $$ = new IfStatementNode($2, $4, nullptr);}
+    | IF simpleExpression THEN codeBlock ELSE codeBlock { $$ = new IfStatementNode($2, $4, $6); }
+    | IF simpleExpression THEN codeBlock ELSE selectionStmt { 
+                            BlockNode* elseBlock = new BlockNode();
+                            elseBlock->statements.emplace_back(shared_ptr<StatementNode>($6));
+                            $$ = new IfStatementNode($2, $4, elseBlock);
+                    }
+    ;
 
 
-elsifList:  
-    | elsifList ELIF simpleExpression THEN statement;
-
-selectionStmt: IF simpleExpression THEN statement elsifList 
-    | IF simpleExpression THEN statement elsifList ELSE statement;
-    
-iterationRange: ID = simpleExpression .. simpleExpression 
-    | ID = simpleExpression ..simpleExpression : simpleExpression;
     
 iterationStmt: WHILE simpleExpression DO statement 
     | LOOP FOREVER statement 
@@ -175,21 +182,27 @@ unaryop: MINUS;
 factor: immutable 
     | mutable;
     
-mutable: ID 
+mutable: identifier 
     | mutable LBRACKET expression RBRACKET;
     
-immutable: LPAR expression RPAR 
-    | call 
-    | constant;
+immutable: LPAR expression RPAR { $$ = $2; }
+    | call { $$ = $1; }
+    | constant { $$ = $1; }
+    ;
     
-call: ID LPAR args RPAR;
+call: identifier LPAR argList RPAR { $$ = new MethodCallNode($1, $3); }
+    | identifier LPAR RPAR { $$ = new MethodCallNode($1); }
+    ;
 
-args:  
-    | argList;
 
-argList: argList COMMA expression 
-    | expression;
+argList: argList COMMA expression { $1->emplace_back(shared_ptr<ExpressionNode>($3)); } 
+    | expression { $$ = new ExpressionList(); $$->emplace_back(shared_ptr<ExpressionNode>($1)); }
+    ;
     
-constant: INTEGER | CHARACTER | REAL | FALSE | TRUE;
+constant: INTEGER { int_64 value; sscanf($1->c_str(), "%ld", &value); $$ = new IntegerNode(value); delete $1; } 
+    | CHARACTER { $$ = new CharNode((*$1)[1]); delete $1; }
+    | REAL { double value; sscanf($1->c_str(), "%lf", &value); $$ = new RealNode(value); delete $1; }
+    | FALSE { $$ = new BoolNode(false); delete $1; }
+    | TRUE; { $$ = new BoolNode(true); delete $1; }
 
 %%
