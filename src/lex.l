@@ -1,8 +1,10 @@
 %{
     #include<iostream>
     #include<string>
+    #include"ast.h"
+    #include"syn.hpp"
 
-    #define SAVE_TOKEN  yylval.string = new std::string(yytext, yyleng)
+    #define SAVE_TOKEN  yylval.string = new std::string(yytext)
     #define TOKEN(t)    (yylval.token = t)
 %}
 
@@ -21,7 +23,7 @@ id [a-zA-Z_][a-zA-Z0-9_]*
 "bool"      SAVE_TOKEN; return BOOL;
 "double"    SAVE_TOKEN; return DOUBLE;
 "true"      return TOKEN(TRUE);
-"false"     return TOKEN(FLASE);
+"false"     return TOKEN(FALSE);
 "static"    return TOKEN(STATIC);
 "if"        return TOKEN(IF);
 "elif"      return TOKEN(ELIF);

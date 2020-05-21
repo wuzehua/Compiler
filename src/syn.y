@@ -8,7 +8,7 @@
     using std::shared_ptr;
     using std::make_shared;
 
-    BlockNode* program;
+    BlockNode* programBlock;
 
     extern int yylex();
     void yyerror(const char *s) { 
@@ -22,6 +22,7 @@
     ExpressionNode* expr;
     StatementNode* stat;
     IdentifierNode* id;
+    ArrayIndexNode* array_index;
     VariableDeclarationNode* var_decl;
     ExpressionList* expr_list;
     VariableList* var_list;
@@ -35,16 +36,18 @@
 %token <token> LBRACE RBRACE LBRACKET RBRACKET LPAR RPAR COMMA SEMI DOT COLON
 %token <token> WHILE DO LOOP FOREVER 
 %token <token> PLUS MINUS MUL DIV NOT AND OR
-%token <token> IF ELIF ELSE WHILE RETURN STATIC BREAK THEN
+%token <token> IF ELIF ELSE RETURN STATIC BREAK THEN EXTERN 
 
 
-%type <block> program declarationList
-%type <stat> declaration varDeclaration funDeclaration
-%type <expr> constant mutable immutable
+%type <block> program declarationList statementList codeBlock
+%type <stat> statement declaration funDeclaration expressionStmt selectionStmt iterationStmt returnStmt
+%type <expr> constant mutable immutable simpleExpression expression andExpression sumExpression unaryExpression unaryRelExpression relExpression mulExpression call factor
 %type <var_decl> paramType varDeclaration
 %type <id> typeSpecifier identifier
-
-
+%type <array_index> arrayElement
+%type <var_list> paramList params
+%type <expr_list> argList
+%type <token> relop sumop mulop
 
 %left PLUS MINUS
 %left MUL DIV
@@ -53,7 +56,7 @@
 
 %%
 
- program: declarationList { program = $1; };
+ program: declarationList { programBlock = $1; };
  
  declarationList: declarationList declaration { $1->statements.emplace_back(shared_ptr<StatementNode>($2));}
     | declaration { $$ = new BlockNode(); 
@@ -79,9 +82,14 @@ varDeclaration: typeSpecifier identifier SEMI {
                 }
             |   typeSpecifier identifier LBRACKET INTEGER RBRACKET SEMI {
                 $1->isArray = true;
-                shared_ptr<ExpressionList> exprl = make_shared<ExpressionList>();
-                exprl->emplace_back(shared_ptr<ExpressionNode>($4));
-                $1->arraySize = exprl;
+                int64_t value; 
+                sscanf($4->c_str(), "%ld", &value); 
+                auto in = new IntegerNode(value); 
+                delete $4;
+                ExpressionList* exprl = new ExpressionList();
+
+                exprl->emplace_back(shared_ptr<ExpressionNode>(in));
+                $1->arraySize = shared_ptr<ExpressionList>(exprl);
                 $$ = new VariableDeclarationNode($1, $2);
             }
             ;
@@ -124,7 +132,7 @@ statement: expressionStmt
     ;
 
         
-expressionStmt: expression SEMI { $$ = $1; } 
+expressionStmt: expression SEMI { $$ = new ExpressionStatementNode($1); } 
     | SEMI { $$ = nullptr; }
     ;
     
@@ -139,51 +147,63 @@ selectionStmt: IF simpleExpression THEN codeBlock { $$ = new IfStatementNode($2,
 
 
     
-iterationStmt: WHILE simpleExpression DO statement 
-    | LOOP FOREVER statement 
-    | loopiterationRange DO statement;
+iterationStmt: WHILE simpleExpression DO codeBlock { $$ = new WhileStatementNode($2, $4); }
+    ;
     
-returnStmt: RETURN SEMI 
-    | RETURN expression SEMI;
+returnStmt: RETURN SEMI { $$ = new ReturnStatementNode(nullptr);}
+    | RETURN expression SEMI { $$ = new ReturnStatementNode($2); }
+    ;
     
 
-expression: mutable ASSIGN expression 
-    | simpleExpression;
+expression: identifier ASSIGN expression { $$ = new AssignmentNode($1, $3); }
+    | arrayElement ASSIGN expression { $$ = new ArrayIndexAssignmentNode($1, $3); }
+    | simpleExpression { $$ = $1; }
+    ;
+
+arrayElement: identifier LBRACKET expression RBRACKET { $$ = new ArrayIndexNode($1, $3); }
+    ;
     
-simpleExpression: simpleExpression OR andExpression 
-    | andExpression;
+simpleExpression: simpleExpression OR andExpression { $$ = new BinaryOperatorNode($1, $2, $3);}
+    | andExpression { $$ = $1; }
+    ;
     
-andExpression: andExpression AND unaryRelExpression 
-    | unaryRelExpression;
+andExpression: andExpression AND unaryRelExpression  { $$ = new BinaryOperatorNode($1, $2, $3);}
+    | unaryRelExpression { $$ = $1; }
+    ;
     
-unaryRelExpression: NOT unaryRelExpression 
-    | relExpression;
+unaryRelExpression: NOT unaryRelExpression { /*Not implement*/ $$ = nullptr; }
+    | relExpression { $$ = $1; }
+    ;
     
-relExpression: sumExpression relop sumExpression 
-    | sumExpression;
+relExpression: sumExpression relop sumExpression { $$ = new BinaryOperatorNode($1, $2, $3);} 
+    | sumExpression { $$ = $1; }
+    ;
     
 relop: LE | LT | GT | GE | EQUAL | NEQUAL;
 
-sumExpression: sumExpression sumop mulExpression 
-    | mulExpression;
+sumExpression: sumExpression sumop mulExpression { $$ = new BinaryOperatorNode($1, $2, $3);}
+    | mulExpression { $$ = $1; }
+    ;
     
 sumop: PLUS | MINUS;
 
-mulExpression: mulExpression mulop unaryExpression 
-    | unaryExpression;
+mulExpression: mulExpression mulop unaryExpression { $$ = new BinaryOperatorNode($1, $2, $3);}
+    | unaryExpression { $$ = $1; }
+    ;
     
 mulop: MUL | DIV;
 
-unaryExpression: unaryop unaryExpression 
-    | factor;
+unaryExpression: factor { $$ = $1; }
+    ;
     
-unaryop: MINUS;
 
-factor: immutable 
-    | mutable;
+factor: immutable { $$ = $1; }
+    | mutable { $$ = $1; }
+    ;
     
-mutable: identifier 
-    | mutable LBRACKET expression RBRACKET;
+mutable: identifier { $$ = $1; }
+    | identifier LBRACKET expression RBRACKET { $$ = new ArrayIndexNode($1, $3); }
+    ;
     
 immutable: LPAR expression RPAR { $$ = $2; }
     | call { $$ = $1; }
@@ -199,10 +219,30 @@ argList: argList COMMA expression { $1->emplace_back(shared_ptr<ExpressionNode>(
     | expression { $$ = new ExpressionList(); $$->emplace_back(shared_ptr<ExpressionNode>($1)); }
     ;
     
-constant: INTEGER { int_64 value; sscanf($1->c_str(), "%ld", &value); $$ = new IntegerNode(value); delete $1; } 
+constant: INTEGER { int64_t value; sscanf($1->c_str(), "%ld", &value); $$ = new IntegerNode(value); delete $1; } 
     | CHARACTER { $$ = new CharNode((*$1)[1]); delete $1; }
     | REAL { double value; sscanf($1->c_str(), "%lf", &value); $$ = new RealNode(value); delete $1; }
-    | FALSE { $$ = new BoolNode(false); delete $1; }
-    | TRUE; { $$ = new BoolNode(true); delete $1; }
-
+    | FALSE { $$ = new BoolNode(false); }
+    | TRUE { $$ = new BoolNode(true); }
+    ;
 %%
+
+int main(){
+    extern FILE* yyin;
+    extern int yyparse(void);
+
+    char filename[50];
+
+    printf("Input file:");
+    scanf("%s", filename);
+    yyin = fopen(filename, "r");
+    yyparse();
+
+    if(programBlock != nullptr){
+        programBlock->debugPrint("");
+        delete programBlock;
+    }
+
+    fclose(yyin);
+    return 0;
+}

@@ -1,0 +1,14 @@
+int a;
+
+int fun(){
+    int b:3;
+    while b > 0 do {
+        b = b - 1;
+    }
+    return b;
+}
+
+int main(){
+    fun();
+    return 0;
+}
