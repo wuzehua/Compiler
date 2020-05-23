@@ -1,7 +1,7 @@
 syn.cpp: syn.y
 	bison -d -o $@ $<
 
-syn.h: syn.cpp
+syn.hpp: syn.cpp
 
-lex.cpp: lex.l syn.h
+lex.cpp: lex.l syn.hpp
 	flex -o $@ $<
