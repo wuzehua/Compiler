@@ -1,18 +1,19 @@
 #pragma once
 
 #include<iostream>
+#include <utility>
 #include<vector>
 #include<string>
-//#include<llvm/IR/Value.h>
+#include<llvm/IR/Value.h>
 #include<memory>
 
 
 class ExpressionNode;
 class VariableDeclarationNode;
 class StatementNode;
-//class CodeGenerationContext;
+class CodeGenerationContext;
 
-//typedef llvm::Value* ValuePtr;
+typedef llvm::Value* ValuePtr;
 typedef std::vector<std::shared_ptr<ExpressionNode>> ExpressionList;
 typedef std::vector<std::shared_ptr<StatementNode>> StatementList;
 typedef std::vector<std::shared_ptr<VariableDeclarationNode>> VariableList;
@@ -22,10 +23,10 @@ using std::make_shared;
 
 class ASTNode{
 public:
-    virtual ~ASTNode(){}
-    // virtual ValuePtr generateCode(CodeGenerationContext& context){
-    //     return nullptr;
-    // }
+    virtual ~ASTNode()= default;
+     virtual ValuePtr generateCode(CodeGenerationContext& context) const {
+         return nullptr;
+     }
 
     virtual void debugPrint(std::string prefix) const{}
 
@@ -42,10 +43,10 @@ public:
 class IntegerNode: public ExpressionNode{
 public:
     int64_t value;
-    IntegerNode(const int64_t& value): value(value){}
-    //ValuePtr generateCode(CodeGenerationContext& context);
+    explicit IntegerNode(const int64_t& value): value(value){}
+    ValuePtr generateCode(CodeGenerationContext& context) const override ;
 
-    void debugPrint(std::string prefix) const{
+    void debugPrint(std::string prefix) const override{
         std::cout<<prefix<<"IntegerNode( value: "<<value<<")\n";
     }
 };
@@ -53,10 +54,10 @@ public:
 class CharNode: public ExpressionNode{
 public:
     char value;
-    CharNode(const char& value): value(value){}
-    //ValuePtr generateCode(CodeGenerationContext& context);
+    explicit CharNode(const char& value): value(value){}
+    ValuePtr generateCode(CodeGenerationContext& context) const override ;
 
-    void debugPrint(std::string prefix) const{
+    void debugPrint(std::string prefix) const override{
         std::cout<<prefix<<"CharNode( value: "<<value<<")\n";
     }
 };
@@ -64,10 +65,10 @@ public:
 class RealNode: public ExpressionNode{
 public:
     double value;
-    RealNode(const double& value): value(value){}
-    //ValuePtr generateCode(CodeGenerationContext& context);
+    explicit RealNode(const double& value): value(value){}
+    ValuePtr generateCode(CodeGenerationContext& context) const override ;
 
-    void debugPrint(std::string prefix) const{
+    void debugPrint(std::string prefix) const override{
         std::cout<<prefix<<"RealNode( value: "<<value<<")\n";
     }
 };
@@ -75,11 +76,11 @@ public:
 class BoolNode: public ExpressionNode{
 public:
     bool value;
-    BoolNode(const bool& value): value(value){}
+    explicit BoolNode(const bool& value): value(value){}
 
-    //ValuePtr generateCode(CodeGenerationContext& context);
+    ValuePtr generateCode(CodeGenerationContext& context) const override ;
 
-    void debugPrint(std::string prefix) const{
+    void debugPrint(std::string prefix) const override{
         std::cout<<prefix<<"BoolNode( value: "<<value<<")\n";
     }
 };
@@ -93,16 +94,16 @@ public:
 
     shared_ptr<ExpressionList> arraySize = nullptr;
 
-    IdentifierNode(const std::string& name): name(name){}
+    explicit IdentifierNode(std::string  name): name(std::move(name)){}
 
-    IdentifierNode(const std::string& name, ExpressionList*& size):
-                name(name){
+    IdentifierNode(std::string  name, ExpressionList*& size):
+                name(std::move(name)){
                     arraySize = shared_ptr<ExpressionList>(size);
                 }
 
-    //ValuePtr generateCode(CodeGenerationContext& context);
+    ValuePtr generateCode(CodeGenerationContext& context) const override ;
 
-    void debugPrint(std::string prefix) const{
+    void debugPrint(std::string prefix) const override{
         std::cout<<prefix<<"IdentifierNode( name: "
                         <<name<<", isType: "<<isType
                         <<", isArray: "<<isArray<<")\n";
@@ -121,9 +122,9 @@ public:
             rightExpr = shared_ptr<ExpressionNode>(right);
         }
     
-    //ValuePtr generateCode(CodeGenerationContext& context);
+    ValuePtr generateCode(CodeGenerationContext& context) const override ;
 
-    void debugPrint(std::string prefix) const{
+    void debugPrint(std::string prefix) const override{
         std::cout<<prefix<<"BinaryOperatorNode( op: "<<op<<")\n";
         std::cout<<prefix<<" LeftExpr:\n";
         leftExpr->debugPrint(prefix + "  ");
@@ -138,13 +139,13 @@ public:
     const shared_ptr<IdentifierNode> id;
     shared_ptr<ExpressionList> args;
 
-    MethodCallNode(IdentifierNode* id): id(shared_ptr<IdentifierNode>(id)), args(nullptr){}
+    explicit MethodCallNode(IdentifierNode* id): id(shared_ptr<IdentifierNode>(id)), args(nullptr){}
     MethodCallNode(IdentifierNode* id, ExpressionList* args):id(shared_ptr<IdentifierNode>(id)), 
                     args(shared_ptr<ExpressionList>(args)){}
 
-    //ValuePtr generateCode(CodeGenerationContext& context);
+    ValuePtr generateCode(CodeGenerationContext& context) const override ;
 
-    void debugPrint(std::string prefix) const{
+    void debugPrint(std::string prefix) const override{
         std::cout<<prefix<<"MethodCallNode\n";
         std::cout<<prefix<<" id:\n";
         id->debugPrint(prefix + "  ");
@@ -167,9 +168,9 @@ public:
         this->expr = shared_ptr<ExpressionNode>(expr);
     }
 
-    //ValuePtr generateCode(CodeGenerationContext& context);
+    ValuePtr generateCode(CodeGenerationContext& context) const override ;
 
-    void debugPrint(std::string prefix) const{
+    void debugPrint(std::string prefix) const override{
         std::cout<<prefix<<"AssignmentNode\n";
         std::cout<<prefix<<" id:\n";
         id->debugPrint(prefix + "  ");
@@ -191,9 +192,9 @@ public:
                         this->index = shared_ptr<ExpressionNode>(index);
                     }
 
-    //ValuePtr generateCode(CodeGenerationContext& context);
+    ValuePtr generateCode(CodeGenerationContext& context) const override ;
 
-    void debugPrint(std::string prefix) const{
+    void debugPrint(std::string prefix) const override{
         std::cout<<prefix<<"ArrayIndexNode\n";
         std::cout<<prefix<<" id:\n";
         id->debugPrint(prefix + "  ");
@@ -212,7 +213,9 @@ public:
             element(shared_ptr<ArrayIndexNode>(element)),
             expr(shared_ptr<ExpressionNode>(expr)){}
 
-    void debugPrint(std::string prefix) const{
+    ValuePtr generateCode(CodeGenerationContext& context) const override ;
+
+    void debugPrint(std::string prefix) const override{
         std::cout<<prefix<<"ArrayIndexAssignmentNode\n";
         std::cout<<prefix<<" element:\n";
         element->debugPrint(prefix + "  ");
@@ -225,11 +228,11 @@ public:
 class BlockNode: public StatementNode{
 public:
     StatementList statements;
-    BlockNode(){}
+    BlockNode()= default;
 
-    //ValuePtr generateCode(CodeGenerationContext& context);
+    ValuePtr generateCode(CodeGenerationContext& context) const override ;
 
-    void debugPrint(std::string prefix) const{
+    void debugPrint(std::string prefix) const override{
         std::cout<<prefix<<"BlockNode\n";
         std::cout<<prefix<<" statements:\n";
         for(auto& stat: statements){
@@ -254,11 +257,11 @@ public:
                             type(shared_ptr<IdentifierNode>(type)), 
                             id(shared_ptr<IdentifierNode>(id)), 
                             assignmentExpr(shared_ptr<ExpressionNode>(expr)){}
-    
 
-    //ValuePtr generateCode(CodeGenerationContext& context);
 
-    void debugPrint(std::string prefix) const{
+    ValuePtr generateCode(CodeGenerationContext& context) const override ;
+
+    void debugPrint(std::string prefix) const override{
         std::cout<<prefix<<"VariableDeclarationNode\n";
         std::cout<<prefix<<" type:\n";
         type->debugPrint(prefix + "  ");
@@ -274,13 +277,13 @@ public:
 class ExpressionStatementNode: public StatementNode{
 public:
     shared_ptr<ExpressionNode> expr;
-    ExpressionStatementNode(ExpressionNode* expr){
+    explicit ExpressionStatementNode(ExpressionNode* expr){
         this->expr = shared_ptr<ExpressionNode>(expr);
     }
 
-    //ValuePtr generateCode(CodeGenerationContext& context);
+    ValuePtr generateCode(CodeGenerationContext& context) const override ;
 
-    void debugPrint(std::string prefix) const{
+    void debugPrint(std::string prefix) const override{
         std::cout<<prefix<<"ExpressionStatementNode\n";
         std::cout<<prefix<<" expr:\n";
         expr->debugPrint(prefix + "  ");
@@ -303,9 +306,9 @@ public:
                             block(shared_ptr<BlockNode>(block)){
                             }
 
-    //ValuePtr generateCode(CodeGenerationContext& context);
+    ValuePtr generateCode(CodeGenerationContext& context) const override ;
 
-    void debugPrint(std::string prefix) const{
+    void debugPrint(std::string prefix) const override{
         std::cout<<prefix<<"FunctionDeclarationNode\n";
         
         std::cout<<prefix<<" type:\n";
@@ -344,9 +347,9 @@ public:
             trueBlock(shared_ptr<BlockNode>(trueBlock)),
             falseBlock(shared_ptr<BlockNode>(falseBlock)){}
 
-    //ValuePtr generateCode(CodeGenerationContext& context);
+    ValuePtr generateCode(CodeGenerationContext& context) const override ;
 
-    void debugPrint(std::string prefix) const{
+    void debugPrint(std::string prefix) const override{
         std::cout<<prefix<<"IfStatementNode\n";
         std::cout<<prefix<<" condition:\n";
         condition->debugPrint(prefix + "  ");
@@ -370,7 +373,9 @@ public:
             condition(shared_ptr<ExpressionNode>(condition)),
             block(shared_ptr<BlockNode>(block)){}
 
-    void debugPrint(std::string prefix) const{
+    ValuePtr generateCode(CodeGenerationContext& context) const override ;
+
+    void debugPrint(std::string prefix) const override{
         std::cout<<prefix<<"WhileStatementNode\n";
         std::cout<<prefix<<" condition:\n";
         condition->debugPrint(prefix + "  ");
@@ -384,9 +389,11 @@ class ReturnStatementNode: public StatementNode{
 public:
     shared_ptr<ExpressionNode> expr;
 
-    ReturnStatementNode(ExpressionNode* expr): expr(shared_ptr<ExpressionNode>(expr)){}
+    explicit ReturnStatementNode(ExpressionNode* expr): expr(shared_ptr<ExpressionNode>(expr)){}
 
-    void debugPrint(std::string prefix) const{
+    ValuePtr generateCode(CodeGenerationContext& context) const override ;
+
+    void debugPrint(std::string prefix) const override{
         std::cout<<prefix<<"ReturnStatementNode\n";
         std::cout<<prefix<<" expr:\n";
         if(expr){
