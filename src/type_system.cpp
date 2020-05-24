@@ -38,7 +38,7 @@ ValuePtr TypeSystem::cast(ValuePtr value, TypePtr type, BasicBlock *block) {
         ops = CastInst::FPToSI;
     }else{
         string errorMessage = "Casting from type: " + llvmTypeToStr(value) + " to type: " + llvmTypeToStr(type) + "is not allowed";
-        Log::raiseError(errorMessage);
+        Log::raiseError(errorMessage, std::cout);
         return value;
     }
 
