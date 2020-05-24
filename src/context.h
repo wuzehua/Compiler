@@ -5,9 +5,9 @@
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
-//#include <json/json.h>
 
-#include <stack>
+#include <memory>
+#include <utility>
 #include <vector>
 #include <memory>
 #include <string>
@@ -19,145 +19,191 @@
 using namespace llvm;
 using std::unique_ptr;
 using std::string;
+using std::map;
+using std::vector;
 
-using SymTable = std::map<string, Value *>;
 
-class CodeGenBlock {
-public:
-    BasicBlock *block;
-    Value *returnValue;
-    std::map<string, Value *> localVars;
-    std::map<string, shared_ptr<IdentifierNode>> types;     // type name string of vars
-    std::map<string, bool> isFuncArg;
-    std::map<string, std::vector<uint64_t>> arraySizes;
+struct Symbol{
+    ValuePtr variable;
+    bool isFunctionArgs;
+    shared_ptr<IdentifierNode> type;
+    vector<uint64_t> size;
+
+};
+
+struct CodeBlock{
+    BasicBlock* block;
+    ValuePtr returnValue;
+    map<string, struct Symbol> symbolTable;
+    struct CodeBlock* next;
+
+    explicit CodeBlock(BasicBlock* block):
+                block(block),
+                returnValue(nullptr),
+                next(nullptr){}
+
+    [[nodiscard]]
+    Symbol* findSymbol(const string name) const {
+        auto iter = symbolTable.find(name);
+        if(iter != symbolTable.end()){
+            return (Symbol*)&(iter->second);
+        }
+
+        return nullptr;
+    }
 };
 
 class CodeGenerationContext {
 private:
-    std::vector<CodeGenBlock *> blockVector;
+    CodeBlock* globalBlock;
+    CodeBlock* currentBlock;
+
+
+    [[nodiscard]]
+    Symbol* findSymbol(const string& name) const {
+        auto tempBlock = currentBlock;
+        Symbol* symbol = nullptr;
+        while (tempBlock != nullptr){
+            symbol = tempBlock->findSymbol(name);
+            if(symbol != nullptr){
+                break;
+            }
+            tempBlock = tempBlock->next;
+        }
+        return symbol;
+    }
 
 public:
     LLVMContext llvmContext;
     IRBuilder<> builder;
     unique_ptr<Module> theModule;
-    SymTable globalVars;
     TypeSystem typeSystem;
 
+
     CodeGenerationContext() : builder(llvmContext), typeSystem(llvmContext) {
-        theModule = unique_ptr<Module>(new Module("main", this->llvmContext));
+        theModule = std::make_unique<Module>("main", this->llvmContext);
+        globalBlock = nullptr;
+        currentBlock = nullptr;
     }
 
-    Value *getSymbolValue(string name) const {
-        for (auto it = blockVector.rbegin(); it != blockVector.rend(); it++) {
-            if ((*it)->localVars.find(name) != (*it)->localVars.end()) {
-                return (*it)->localVars[name];
+    [[nodiscard]]
+    ValuePtr getSymbolValue(const string& name) const {
+        Symbol* symbol = findSymbol(name);
+        return symbol == nullptr ? nullptr : symbol->variable;
+    }
+
+    [[nodiscard]]
+    shared_ptr<IdentifierNode> getSymbolType(const string& name) const {
+        Symbol* symbol = findSymbol(name);
+        return symbol == nullptr ? nullptr : symbol->type;
+    }
+
+
+    [[nodiscard]]
+    bool isFuncArg(const string& name) const {
+        Symbol* symbol = findSymbol(name);
+        return symbol == nullptr ? false : symbol->isFunctionArgs;
+    }
+
+    void setSymbolValue(const string& name, ValuePtr value) {
+        Symbol* symbol = findSymbol(name);
+        if (symbol != nullptr){
+            symbol->variable = value;
+        }
+    }
+
+    void setSymbolType(const string& name, shared_ptr<IdentifierNode> value) {
+        Symbol* symbol = findSymbol(name);
+        if (symbol != nullptr){
+            symbol->type = std::move(value);
+        }
+    }
+
+    void setFuncArg(const string& name, bool value) {
+        Symbol* symbol = findSymbol(name);
+        if (symbol != nullptr){
+            symbol->isFunctionArgs = value;
+        }
+    }
+
+
+
+
+    [[nodiscard]]
+    BasicBlock* getCurrentBasicBlock() const {
+        return currentBlock != nullptr ? currentBlock->block : nullptr;
+    }
+
+    void addCodeBlock(BasicBlock* block){
+        auto codeBlock = new CodeBlock(block);
+        if(globalBlock == nullptr){
+            globalBlock = codeBlock;
+            currentBlock = codeBlock;
+        }else{
+            codeBlock->next = currentBlock;
+            currentBlock = codeBlock;
+        }
+    }
+
+    void removeCurrentCodeBlock(){
+        if(currentBlock != nullptr){
+            auto temp = currentBlock;
+            currentBlock = currentBlock->next;
+            delete temp;
+            if(currentBlock == nullptr){
+                globalBlock = nullptr;
             }
         }
-        return nullptr;
     }
 
-    shared_ptr<IdentifierNode> getSymbolType(string name) const {
-        for (auto it = blockVector.rbegin(); it != blockVector.rend(); it++) {
-            if ((*it)->types.find(name) != (*it)->types.end()) {
-                return (*it)->types[name];
-            }
-        }
-        return nullptr;
-    }
 
-    bool isFuncArg(string name) const {
-        for (auto it = blockVector.rbegin(); it != blockVector.rend(); it++) {
-            if ((*it)->isFuncArg.find(name) != (*it)->isFuncArg.end()) {
-                return (*it)->isFuncArg[name];
-            }
-        }
-        return false;
-    }
-
-    void setSymbolValue(string name, Value *value) {
-        if (blockVector.back()->localVars.find(name) != blockVector.back()->localVars.end()) {
-            blockVector.back()->localVars[name] = value;
+    void setCurrentReturnValue(ValuePtr value) {
+        if(currentBlock != nullptr){
+            currentBlock->returnValue = value;
         }
     }
 
-    void setSymbolType(string name, shared_ptr<IdentifierNode> value) {
-        if (blockVector.back()->types.find(name) != blockVector.back()->types.end()) {
-            blockVector.back()->types[name] = value;
+    ValuePtr getCurrentReturnValue() {
+        return currentBlock != nullptr ? currentBlock->returnValue : nullptr;
+    }
+
+    void setArraySize(const string& name, std::vector<uint64_t> value) {
+        Symbol* symbol = findSymbol(name);
+        if(symbol != nullptr){
+            symbol->size = std::move(value);
         }
     }
 
-    void setFuncArg(string name, bool value) {
-        if (blockVector.back()->isFuncArg.find(name) != blockVector.back()->isFuncArg.end()) {
-            blockVector.back()->isFuncArg[name] = value;
-        }
-    }
-
-    BasicBlock *currentBlock() const {
-        if (blockVector.empty()) {
-            return nullptr;
-        }
-        return blockVector.back()->block;
-    }
-
-    void pushBlock(BasicBlock *block) {
-        CodeGenBlock *codeGenBlock = new CodeGenBlock();
-        codeGenBlock->block = block;
-        codeGenBlock->returnValue = nullptr;
-        blockVector.push_back(codeGenBlock);
-    }
-
-    void popBlock() {
-        if (blockVector.empty()) {
-            return;
-        }
-        CodeGenBlock *codeGenBlock = blockVector.back();
-        blockVector.pop_back();
-        delete codeGenBlock;
-    }
-
-    void setCurrentReturnValue(Value *value) {
-        if (blockVector.empty()) {
-            return;
-        }
-        blockVector.back()->returnValue = value;
-    }
-
-    Value *getCurrentReturnValue() {
-        if (blockVector.empty()) {
-            return nullptr;
-        }
-        return blockVector.back()->returnValue;
-    }
-
-    void setArraySize(string name, std::vector<uint64_t> value) {
-        if (blockVector.back()->arraySizes.find(name) != blockVector.back()->arraySizes.end()) {
-            blockVector.back()->arraySizes[name] = value;
-        }
-    }
-
-    std::vector<uint64_t> getArraySize(string name) {
-        for (auto it = blockVector.rbegin(); it != blockVector.rend(); it++) {
-            if ((*it)->arraySizes.find(name) != (*it)->arraySizes.end()) {
-                return (*it)->arraySizes[name];
-            }
-        }
-        return std::vector<uint64_t>();
+    std::vector<uint64_t> getArraySize(const string& name) {
+        Symbol* symbol = findSymbol(name);
+        return symbol != nullptr ? symbol->size : std::vector<uint64_t>();
     }
 
     void PrintSymTable() const {
-        std::cout << "======= Print Symbol Table ========" << std::endl;
-        string prefix = "";
-        for (auto it = blockVector.begin(); it != blockVector.end(); it++) {
-            for (auto it2 = (*it)->localVars.begin(); it2 != (*it)->localVars.end(); it2++) {
-                std::cout << prefix << it2->first << " = " << it2->second << ": " << this->getSymbolType(it2->first)
-                          << std::endl;
+        std::cout << "[Symbol Table]\n\n";
+        auto temp = currentBlock;
+        int index = 0;
+        while (temp != nullptr){
+            if(temp == globalBlock){
+                std::cout<<"[Global Block]\n";
+            }else {
+                std::cout << "[Block " << index << "]\n";
             }
-            prefix += "\t";
+            for(auto & it : currentBlock->symbolTable){
+                const Symbol& symbol = it.second;
+                std::cout<<it.first<<": Var("<<symbol.variable<<") isFuncArgs("<<symbol.isFunctionArgs<<") ";
+                if(symbol.type){
+                    std::cout<<"Type(name:"<<symbol.type->name<<", isArray:"<<symbol.type->isArray<<", isType:"<<symbol.type->isType<<")\n";
+                }
+            }
+
+            std::cout<<'\n';
+            index += 1;
+            temp = temp->next;
         }
-        std::cout << "===================================" << std::endl;
     }
 
-    void generateCode(BlockNode &);
+    void generateCode(BlockNode& blockNode) const ;
 
 };
 
