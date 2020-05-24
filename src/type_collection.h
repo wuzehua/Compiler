@@ -49,7 +49,7 @@ private:
 public:
 
     explicit TypeCollection(llvm::LLVMContext& context){
-        TypePtr type = llvm::Type::getInt32Ty(context);
+        TypePtr type = llvm::Type::getInt64Ty(context);
         ValuePtr defaultValue = llvm::ConstantInt::get(type, 0, true);
 
         typeMap.insert({"int", TypeWrapper(type, defaultValue)});
@@ -68,13 +68,17 @@ public:
         defaultValue = llvm::ConstantInt::get(type, 0);
 
         typeMap.insert({"bool", TypeWrapper(type, defaultValue)});
+
+        type = llvm::Type::getVoidTy(context);
+
+        typeMap.insert({"void", TypeWrapper(type)});
     }
 
 
     TypePtr getVarType(const string& name){
         auto it = typeMap.find(name);
         if(it == typeMap.end()){
-            Log::raiseError("Type: " + name + " not defined");
+            Log::raiseError("Type: " + name + " not defined", std::cout);
             return nullptr;
         }
 
@@ -89,7 +93,7 @@ public:
     ValuePtr getTypeDefault(const string& type){
         auto it = typeMap.find(type);
         if(it == typeMap.end()){
-            Log::raiseError("Type: " + type + " not defined");
+            Log::raiseError("Type: " + type + " not defined", std::cout);
             return nullptr;
         }
 

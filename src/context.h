@@ -1,5 +1,4 @@
-#ifndef __CONTEXT_H__
-#define __CONTEXT_H__
+#pragma once
 
 #include <llvm/IR/Value.h>
 #include <llvm/IR/LLVMContext.h>
@@ -43,7 +42,7 @@ struct CodeBlock{
                 next(nullptr){}
 
     [[nodiscard]]
-    Symbol* findSymbol(const string name) const {
+    Symbol* findSymbol(const string& name) const {
         auto iter = symbolTable.find(name);
         if(iter != symbolTable.end()){
             return (Symbol*)&(iter->second);
@@ -203,8 +202,6 @@ public:
         }
     }
 
-    void generateCode(BlockNode& blockNode) const ;
+    void generateCode(BlockNode* blockNode);
 
 };
-
-#endif

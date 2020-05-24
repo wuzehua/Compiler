@@ -406,6 +406,3 @@ public:
     }
 
 };
-
-
-std::unique_ptr<ExpressionNode> LogError(const char *str);
