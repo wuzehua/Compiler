@@ -12,7 +12,7 @@ LDFLAGS = `$(LLVMCONFIG) --ldflags` -lpthread -ldl -lz -lncurses -rdynamic -L/us
 LIBS = `$(LLVMCONFIG) --libs`
 
 clean:
-	$(RM) -rf syn.cpp syn.hpp test compiler lex.cpp *.output $(OBJS)
+	$(RM) -rf test compiler *.output $(OBJS)
 
 ast.cpp: ast.h
 
