@@ -12,7 +12,7 @@
 //#include <llvm/IR/Verifier.h>
 #include "context.h"
 #include "ast.h"
-#include "TypeSystem.h"
+#include "type_system.h"
 
 using legacy::PassManager;
 #define ISTYPE(value, id) (value->getType()->getTypeID() == id)

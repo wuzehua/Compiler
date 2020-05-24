@@ -14,7 +14,7 @@
 #include <map>
 #include "ast.h"
 #include "syn.hpp"
-#include "TypeSystem.h"
+#include "type_system.h"
 
 using namespace llvm;
 using std::unique_ptr;
@@ -160,9 +160,5 @@ public:
     void generateCode(BlockNode &);
 
 };
-
-Value *LogErrorV(const char *str);
-
-Value *LogErrorV(string str);
 
 #endif
