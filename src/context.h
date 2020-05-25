@@ -11,6 +11,7 @@
 #include <memory>
 #include <string>
 #include <map>
+#include <stack>
 #include "ast.h"
 #include "syn.hpp"
 #include "type_system.h"
@@ -78,6 +79,7 @@ public:
     unique_ptr<Module> theModule;
     TypeSystem typeSystem;
 
+    stack<CodeBlock> codeBlockStack;
 
     CodeGenerationContext() : builder(llvmContext), typeSystem(llvmContext) {
         theModule = std::make_unique<Module>("main", this->llvmContext);
@@ -133,7 +135,7 @@ public:
         return currentBlock != nullptr ? currentBlock->block : nullptr;
     }
 
-    void addCodeBlock(BasicBlock* block){
+    void pushCodeBlock(BasicBlock* block){
         auto codeBlock = new CodeBlock(block);
         if(globalBlock == nullptr){
             globalBlock = codeBlock;
@@ -144,7 +146,7 @@ public:
         }
     }
 
-    void removeCurrentCodeBlock(){
+    void popCurrentCodeBlock(){
         if(currentBlock != nullptr){
             auto temp = currentBlock;
             currentBlock = currentBlock->next;

@@ -158,11 +158,18 @@ ValuePtr BinaryOperatorNode::generateCode(CodeGenerationContext &context) const 
 
 ValuePtr FunctionCallNode::generateCode(CodeGenerationContext &context) const {
     //TODO
+
+
     return nullptr;
 }
 
 ValuePtr AssignmentNode::generateCode(CodeGenerationContext &context) const {
     //TODO
+    ValuePtr var = context.getSymbolValue(this->id->name);
+    TypePtr varTp = context.typeSystem.getLLVMVarType(context.getSymbolType(this->id->name)->name);
+
+    
+
     return nullptr;
 }
 
@@ -186,8 +193,26 @@ ValuePtr BlockNode::generateCode(CodeGenerationContext &context) const {
 }
 
 ValuePtr VariableDeclarationNode::generateCode(CodeGenerationContext &context) const {
-    //TODO
-    return nullptr;
+    
+    TypePtr type = context.typeSystem.getLLVMVarType(this->type->name);
+    ValuePtr val = NULL;
+    Value *cd;
+    if(!(this->type->isArray))
+    {
+        cd = context.builder.CreateAlloca(type);
+    }
+    //TODO: Add support for array
+    /*else
+    {
+        int len = this->id->arraySize;
+        std::vector<unsigned long long> arrayDimensions;
+        
+
+        cd = context.builder.CreateAlloca()
+    }*/
+    
+
+    return cd;
 }
 
 ValuePtr ExpressionStatementNode::generateCode(CodeGenerationContext &context) const {
@@ -198,9 +223,43 @@ ValuePtr ExpressionStatementNode::generateCode(CodeGenerationContext &context) c
 ValuePtr FunctionDeclarationNode::generateCode(CodeGenerationContext &context) const {
     Type * retTp = context.typeSystem.getLLVMVarType(*(this->type));
     
-    
-    
-    
+    std::vector<TypePtr> argsTypeVec;
+
+    for(auto it = this->args->begin(); it != this->args->end(); ++it)
+        argsTypeVec.push_back(context.typeSystem.getLLVMVarType((*it)->type->name));
+
+    FunctionType *thisFuncType = nullptr;
+    if(argsTypeVec.size() == 0)
+        thisFuncType = FunctionType::get(retTp, false);
+    else
+        thisFuncType = FunctionType::get(retTp, argsTypeVec, false);
+
+    Function *thisFunc = Function::Create(
+        thisFuncType, Function::ExternalLinkage, this->id->name, context.theModule.get());
+
+    BasicBlock* funcBlock = BasicBlock::Create(context.llvmContext, "entry", thisFunc);
+    context.builder.SetInsertPoint(funcBlock);
+    context.pushCodeBlock(funcBlock);
+
+    auto args_it = this->args->begin();
+    auto llvmargs_it = thisFunc->args().begin();
+    for(; args_it != this->args->end() && llvmargs_it != thisFunc->args().end(); 
+        ++args_it, ++llvmargs_it)
+    {
+        llvmargs_it->setName((*args_it)->id->name);
+        ValuePtr val;
+        if((*args_it)->type->isArray)
+            val = context.builder.CreateAlloca(context.typeSystem.getLLVMVarType((*args_it)->type->name), 0U);
+        else
+            val = (*args_it)->generateCode(context);
+        context.builder.CreateStore(llvmargs_it, val, false);
+        context.setFuncArg((*args_it)->id->name, true);
+        context.setSymbolValue((*args_it)->id->name, val);
+        context.setSymbolType((*args_it)->id->name, (*args_it)->type);
+    }
+
+
+
     return nullptr;
 }
 
@@ -221,15 +280,5 @@ ValuePtr ReturnStatementNode::generateCode(CodeGenerationContext &context) const
         return value;
     }else{
         return nullptr;
-    }
-}
-
-void compile_and_run(BlockNode *program)
-{
-    if(program != nullptr) {
-        program->debugPrint("");
-//        CodeGenerationContext ctxt;
-//        program->generateCode(ctxt);
-        delete program;
     }
 }

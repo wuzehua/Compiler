@@ -37,7 +37,7 @@ void CodeGenerationContext::generateCode(BlockNode* blockNode) {
 
     BasicBlock* block = BasicBlock::Create(llvmContext, "entry", main);
 
-    addCodeBlock(block);
+    pushCodeBlock(block);
     auto value = blockNode->generateCode(*this);
-    removeCurrentCodeBlock();
+    popCurrentCodeBlock();
 }
