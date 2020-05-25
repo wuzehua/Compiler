@@ -31,9 +31,9 @@ public:
 
     explicit TypeSystem(LLVMContext &context):llvmContext(context), typeCollection(context) {}
 
-    TypePtr getVarType(const IdentifierNode &type);
+    TypePtr getLlvmVarType(const IdentifierNode &type);
 
-    TypePtr getVarType(string typeStr);
+    TypePtr getLlvmVarType(string typeStr);
 
     ValuePtr getDefaultValue(string typeStr);
 
@@ -44,6 +44,5 @@ public:
     static string llvmTypeToStr(TypePtr type);
 
 };
-
 
 

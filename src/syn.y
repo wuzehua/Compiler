@@ -210,8 +210,8 @@ immutable: LPAR expression RPAR { $$ = $2; }
     | constant { $$ = $1; }
     ;
     
-call: identifier LPAR argList RPAR { $$ = new MethodCallNode($1, $3); }
-    | identifier LPAR RPAR { $$ = new MethodCallNode($1); }
+call: identifier LPAR argList RPAR { $$ = new FunctionCallNode($1, $3); }
+    | identifier LPAR RPAR { $$ = new FunctionCallNode($1); }
     ;
 
 
@@ -227,22 +227,5 @@ constant: INTEGER { int64_t value; sscanf($1->c_str(), "%ld", &value); $$ = new 
     ;
 %%
 
-int main(){
-    extern FILE* yyin;
-    extern int yyparse(void);
-
-    char filename[50];
-
-    printf("Input file:");
-    scanf("%s", filename);
-    yyin = fopen(filename, "r");
-    yyparse();
-
-    if(programBlock != nullptr){
-        programBlock->debugPrint("");
-        delete programBlock;
-    }
-
-    fclose(yyin);
-    return 0;
-}
+extern int dbg_on;
+extern void compile_and_run(BlockNode* b);

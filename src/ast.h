@@ -7,6 +7,7 @@
 #include<llvm/IR/Value.h>
 #include<memory>
 
+extern int dbg_on;
 
 class ExpressionNode;
 
@@ -23,6 +24,7 @@ typedef std::vector<std::shared_ptr<VariableDeclarationNode>> VariableList;
 
 using std::shared_ptr;
 using std::make_shared;
+
 
 class ASTNode {
 public:
@@ -142,20 +144,20 @@ public:
 };
 
 
-class MethodCallNode : public ExpressionNode {
+class FunctionCallNode : public ExpressionNode {
 public:
     const shared_ptr<IdentifierNode> id;
     shared_ptr<ExpressionList> args;
 
-    explicit MethodCallNode(IdentifierNode *id) : id(shared_ptr<IdentifierNode>(id)), args(nullptr) {}
+    explicit FunctionCallNode(IdentifierNode *id) : id(shared_ptr<IdentifierNode>(id)), args(nullptr) {}
 
-    MethodCallNode(IdentifierNode *id, ExpressionList *args) : id(shared_ptr<IdentifierNode>(id)),
+    FunctionCallNode(IdentifierNode *id, ExpressionList *args) : id(shared_ptr<IdentifierNode>(id)),
                                                                args(shared_ptr<ExpressionList>(args)) {}
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
     void debugPrint(std::string prefix) const override {
-        std::cout << prefix << "MethodCallNode\n";
+        std::cout << prefix << "FunctionCallNode\n";
         std::cout << prefix << " id:\n";
         id->debugPrint(prefix + "  ");
         std::cout << prefix << " args:\n";
@@ -406,3 +408,5 @@ public:
     }
 
 };
+
+void compile_and_run(BlockNode *program);

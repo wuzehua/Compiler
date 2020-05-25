@@ -7,16 +7,16 @@
 using llvm::Type;
 using llvm::CastInst;
 
-TypePtr TypeSystem::getVarType(const IdentifierNode &type) {
+TypePtr TypeSystem::getLlvmVarType(const IdentifierNode &type) {
     assert(type.isType);
     if (type.isArray) {     // array type when allocation, pointer type when pass parameters
-        return llvm::PointerType::get(getVarType(type.name), 0);
+        return llvm::PointerType::get(getLlvmVarType(type.name), 0);
     }
 
-    return getVarType(type.name);
+    return getLlvmVarType(type.name);
 }
 
-TypePtr TypeSystem::getVarType(string typeStr) {
+TypePtr TypeSystem::getLlvmVarType(string typeStr) {
     return typeCollection.getVarType(typeStr);
 }
 
@@ -78,6 +78,4 @@ string TypeSystem::llvmTypeToStr(TypePtr value) {
             return "Unknown";
     }
 }
-
-
 
