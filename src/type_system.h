@@ -31,13 +31,20 @@ public:
 
     explicit TypeSystem(LLVMContext &context):llvmContext(context), typeCollection(context) {}
 
-    TypePtr getLlvmVarType(const IdentifierNode &type);
+    TypePtr getLLVMVarType(const IdentifierNode &type);
 
-    TypePtr getLlvmVarType(string typeStr);
+    TypePtr getLLVMVarType(const string& typeStr);
 
-    ValuePtr getDefaultValue(string typeStr);
+    ValuePtr getDefaultValue(const string& typeStr);
 
     ValuePtr cast(ValuePtr value, TypePtr type, BasicBlock *block);
+
+
+    bool castAvailable(ValuePtr v1, ValuePtr v2);
+
+    bool isNumber(ValuePtr v);
+
+    bool isBool(ValuePtr v);
 
     static string llvmTypeToStr(ValuePtr value);
 

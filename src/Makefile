@@ -5,6 +5,7 @@ OBJS = 	ast.o\
 		type_system.o \
 		syn.o \
 		lex.o  \
+		main.o \
 
 LLVMCONFIG = llvm-config
 CPPFLAGS = `$(LLVMCONFIG) --cppflags` -std=c++17

@@ -7,13 +7,9 @@
 using std::shared_ptr;
 using std::make_shared;
 
-BlockNode* programBlock;
+extern BlockNode* programBlock;
 
-extern int yylex();
-void yyerror(const char *s) { 
-    std::printf("Error: %s\n", s);
-    std::exit(1); 
-}
+
 
 int main(){
     extern FILE* yyin;

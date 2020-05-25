@@ -7,7 +7,7 @@
 #include "llvm/ADT/STLExtras.h"
 
 #include "llvm/IR/BasicBlock.h"
-#include "llvm/IR/Constants.h"
+#include <llvm/IR/Constants.h>
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Verifier.h"
@@ -17,7 +17,7 @@
 #include "ast.h"
 #include "context.h"
 
-int debug_on = 1;
+
 
 ValuePtr IntegerNode::generateCode(CodeGenerationContext& context) const {
     Type* type = Type::getInt32Ty(context.llvmContext); //设置返回值的类型为int32
@@ -45,94 +45,103 @@ ValuePtr IdentifierNode::generateCode(CodeGenerationContext &context) const {
     return nullptr;
 }
 
-static LLVMContext AnLLVMContextInstance;
-static IRBuilder<> builderapi(AnLLVMContextInstance);
-static TypeSystem typesys(AnLLVMContextInstance);
 
 ValuePtr BinaryOperatorNode::generateCode(CodeGenerationContext &context) const {
     ValuePtr opL = leftExpr->generateCode(context);
     ValuePtr opR = rightExpr->generateCode(context);
     
-    if(!opL || !opR)
+    if(!opL || !opR) {
         Log::raiseError("Invalid Oprands near operator with code [" + std::to_string(this->op) + "]!", std::cout);
+        return nullptr;
+    }
+
 
     auto typeL = opL->getType()->getTypeID();
     auto typeR = opR->getType()->getTypeID();
-    bool LisDouble = 0, RisDouble = 0;
-    if(typeL == Type::DoubleTyID)
-        LisDouble = 1;
-    if(typeR == Type::DoubleTyID)
-        RisDouble = 1;
+    bool bothFloat = false;
+
+    if(typeL == Type::DoubleTyID || typeR == Type::DoubleTyID){
+        bothFloat = true;
+        if(!(typeL == Type::DoubleTyID)){
+            opL = context.builder.CreateSIToFP(opL, Type::getDoubleTy(context.llvmContext), "fopL");
+        }
+
+        if (!(typeR == Type::DoubleTyID)){
+            opR = context.builder.CreateSIToFP(opL, Type::getDoubleTy(context.llvmContext), "fopR");
+        }
+    }
+
 
     switch(this->op)
     {
         case yytokentype::LT:
-            if(!LisDouble && !RisDouble)
-                return builderapi.CreateICmpSLT(opL, opR, "Icmp");
+            if(!bothFloat)
+                return context.builder.CreateICmpSLT(opL, opR, "Ilt");
             else
-                return builderapi.CreateFCmpULT(opL, opR, "Dcmp");
+                return context.builder.CreateFCmpULT(opL, opR, "Dlt");
         case yytokentype::GT:
-            if(!LisDouble && !RisDouble)
-                return builderapi.CreateICmpSGT(opL, opR, "Icmp");
+            if(!bothFloat)
+                return context.builder.CreateICmpSGT(opL, opR, "Igt");
             else
-                return builderapi.CreateFCmpUGT(opL, opR, "Dcmp");
+                return context.builder.CreateFCmpUGT(opL, opR, "Dgt");
         case yytokentype::LE:
-            if(!LisDouble && !RisDouble)
-                return builderapi.CreateICmpSLE(opL, opR, "Icmp");
+            if(!bothFloat)
+                return context.builder.CreateICmpSLE(opL, opR, "Ile");
             else
-                return builderapi.CreateFCmpULE(opL, opR, "Dcmp");
+                return context.builder.CreateFCmpULE(opL, opR, "Dle");
         case yytokentype::GE:
-            if(!LisDouble && !RisDouble)
-                return builderapi.CreateICmpSGE(opL, opR, "Icmp");
+            if(!bothFloat)
+                return context.builder.CreateICmpSGE(opL, opR, "Ige");
             else
-                return builderapi.CreateFCmpUGE(opL, opR, "Dcmp");
+                return context.builder.CreateFCmpUGE(opL, opR, "Dge");
         case yytokentype::EQUAL:
-            if(!LisDouble && !RisDouble)
-                return builderapi.CreateICmpEQ(opL, opR, "Icmp");
+            if(!bothFloat)
+                return context.builder.CreateICmpEQ(opL, opR, "Ieq");
             else
-                return builderapi.CreateFCmpUEQ(opL, opR, "Dcmp");
+                return context.builder.CreateFCmpUEQ(opL, opR, "Deq");
         case yytokentype::NEQUAL:
-            if(!LisDouble && !RisDouble)
-                return builderapi.CreateICmpNE(opL, opR, "Icmp");
+            if(!bothFloat)
+                return context.builder.CreateICmpNE(opL, opR, "Ine");
             else
-                return builderapi.CreateFCmpUNE(opL, opR, "Dcmp");
+                return context.builder.CreateFCmpUNE(opL, opR, "Dne");
 
         case yytokentype::PLUS:
-            if(!LisDouble && !RisDouble)
-                return builderapi.CreateAdd(opL, opR, "Iaddtmp");
+            if(!bothFloat)
+                return context.builder.CreateAdd(opL, opR, "Iaddtmp");
             else
-                return builderapi.CreateFAdd(opL, opR, "Daddtmp");
+                return context.builder.CreateFAdd(opL, opR, "Daddtmp");
 
         case yytokentype::MINUS:
-            if(!LisDouble && !RisDouble)
-                return builderapi.CreateSub(opL, opR, "Isubtmp");
+            if(!bothFloat)
+                return context.builder.CreateSub(opL, opR, "Isubtmp");
             else
-                return builderapi.CreateFSub(opL, opR, "Dsubtmp");
+                return context.builder.CreateFSub(opL, opR, "Dsubtmp");
 
         case yytokentype::MUL:
-            if(!LisDouble && !RisDouble)
-                return builderapi.CreateMul(opL, opR, "Imultmp");
+            if(!bothFloat)
+                return context.builder.CreateMul(opL, opR, "Imultmp");
             else
-                return builderapi.CreateFMul(opL, opR, "Dmultmp");
+                return context.builder.CreateFMul(opL, opR, "Dmultmp");
 
         case yytokentype::DIV:
-            if(!LisDouble && !RisDouble)
-                return builderapi.CreateSDiv(opL, opR, "Idivtmp");
+            if(!bothFloat)
+                return context.builder.CreateSDiv(opL, opR, "Idivtmp");
             else
-                return builderapi.CreateFDiv(opL, opR, "Ddivtmp");
+                return context.builder.CreateFDiv(opL, opR, "Ddivtmp");
 
         case yytokentype::AND:
-            if(!LisDouble && !RisDouble)
-                return builderapi.CreateAnd(opL, opR, "andtmp");
-            else
+            if(!bothFloat) {
+                return context.builder.CreateAnd(opL, opR, "andtmp");
+            }else
             {
                 Log::raiseError("Invalid bit operation operand!", std::cout);
                 break;
             }
 
         case yytokentype::OR:
-            if(!LisDouble && !RisDouble)
-                return builderapi.CreateAnd(opL, opR, "andtmp");
+            if(!bothFloat) {
+                return context.builder.CreateAnd(opL, opR, "andtmp");
+            }
             else
             {
                 Log::raiseError("Invalid bit operation operand!", std::cout);
@@ -169,9 +178,11 @@ ValuePtr ArrayIndexAssignmentNode::generateCode(CodeGenerationContext &context) 
 }
 
 ValuePtr BlockNode::generateCode(CodeGenerationContext &context) const {
+    ValuePtr value = nullptr;
+
     for(auto it = this->statements.begin(); it != this->statements.end(); ++it)
-        (*it)->generateCode(context);
-    return nullptr;
+        value = (*it)->generateCode(context);
+    return value;
 }
 
 ValuePtr VariableDeclarationNode::generateCode(CodeGenerationContext &context) const {
@@ -185,7 +196,7 @@ ValuePtr ExpressionStatementNode::generateCode(CodeGenerationContext &context) c
 }
 
 ValuePtr FunctionDeclarationNode::generateCode(CodeGenerationContext &context) const {
-    Type * retTp = typesys.getLlvmVarType(*(this->type));
+    Type * retTp = context.typeSystem.getLLVMVarType(*(this->type));
     
     
     
@@ -215,10 +226,10 @@ ValuePtr ReturnStatementNode::generateCode(CodeGenerationContext &context) const
 
 void compile_and_run(BlockNode *program)
 {
-    if(program != nullptr){
-    if(dbg_on) program->debugPrint("");
-    llvm::LLVMContext llvmctxt;
-    CodeGenerationContext ctxt;
-    program->generateCode(ctxt);
-    delete program;
+    if(program != nullptr) {
+        program->debugPrint("");
+//        CodeGenerationContext ctxt;
+//        program->generateCode(ctxt);
+        delete program;
+    }
 }

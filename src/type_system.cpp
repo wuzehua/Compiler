@@ -7,23 +7,40 @@
 using llvm::Type;
 using llvm::CastInst;
 
-TypePtr TypeSystem::getLlvmVarType(const IdentifierNode &type) {
+TypePtr TypeSystem::getLLVMVarType(const IdentifierNode &type) {
     assert(type.isType);
     if (type.isArray) {     // array type when allocation, pointer type when pass parameters
-        return llvm::PointerType::get(getLlvmVarType(type.name), 0);
+        return llvm::PointerType::get(getLLVMVarType(type.name), 0);
     }
 
-    return getLlvmVarType(type.name);
+    return getLLVMVarType(type.name);
 }
 
-TypePtr TypeSystem::getLlvmVarType(string typeStr) {
+TypePtr TypeSystem::getLLVMVarType(const string& typeStr) {
     return typeCollection.getVarType(typeStr);
 }
 
 
-ValuePtr TypeSystem::getDefaultValue(string typeStr) {
+bool TypeSystem::castAvailable(ValuePtr v1, ValuePtr v2) {
+    return v1->getType()->getTypeID() == v2->getType()->getTypeID() ||
+            (v1->getType() == Type::getInt64Ty(llvmContext) && v2->getType() == Type::getDoubleTy(llvmContext)) ||
+            (v2->getType() == Type::getInt64Ty(llvmContext) && v1->getType() == Type::getDoubleTy(llvmContext));
+}
+
+bool TypeSystem::isNumber(ValuePtr v) {
+    return v->getType() == Type::getInt64Ty(llvmContext) || v->getType() == Type::getDoubleTy(llvmContext);
+}
+
+bool TypeSystem::isBool(ValuePtr v) {
+    return v->getType() == typeCollection.getVarType("bool");
+}
+
+ValuePtr TypeSystem::getDefaultValue(const string& typeStr) {
     return typeCollection.getTypeDefault(typeStr);
 }
+
+
+
 
 ValuePtr TypeSystem::cast(ValuePtr value, TypePtr type, BasicBlock *block) {
     TypePtr origin = value->getType();
