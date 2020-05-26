@@ -2,40 +2,40 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Value.h>
-#include <llvm/IR/IRBuilder.h>
 #include "llvm/ADT/APFloat.h"
-#include "llvm/ADT/STLExtras.h"
 
-#include "llvm/IR/BasicBlock.h"
+#include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Constants.h>
-#include "llvm/IR/DerivedTypes.h"
-#include "llvm/IR/Function.h"
-#include "llvm/IR/Verifier.h"
+#include <llvm/IR/DerivedTypes.h>
+#include <llvm/IR/Function.h>
 #include <string>
 #include <functional>
 
 #include "ast.h"
 #include "context.h"
 
-#define ISTYPE(value, id) (value->getType()->getTypeID() == id)
 
 
 ValuePtr IntegerNode::generateCode(CodeGenerationContext &context) const {
+    Log::raiseMessage("Generating Integer Const");
     Type *type = Type::getInt32Ty(context.llvmContext); //设置返回值的类型为int32
     return llvm::ConstantInt::get(type, value, true);
 }
 
 ValuePtr CharNode::generateCode(CodeGenerationContext &context) const {
+    Log::raiseMessage("Generating Char Const");
     Type *type = Type::getInt16Ty(context.llvmContext);
     return llvm::ConstantInt::get(type, value, true);
 }
 
 ValuePtr RealNode::generateCode(CodeGenerationContext &context) const {
+    Log::raiseMessage("Generating Real Const");
     Type *type = Type::getDoubleTy(context.llvmContext);
     return llvm::ConstantFP::get(type, value);
 }
 
 ValuePtr BoolNode::generateCode(CodeGenerationContext &context) const {
+    Log::raiseMessage("Generating Bool Const");
     Type *type = Type::getInt1Ty(context.llvmContext);
     return llvm::ConstantInt::get(type, value, true);
 }
@@ -173,9 +173,9 @@ ValuePtr FunctionCallNode::generateCode(CodeGenerationContext &context) const {
         Log::raiseError("Function args number not match, " + id->name + " requires " + std::to_string(calleeF->size()) +
                         "args, but " + std::to_string(args->size()) + "args are given", std::cout);
     }
-    std::vector<Value *> argsList;
-    for (auto it = args->begin(); it != args->end(); it++) {
-        argsList.push_back((*it)->generateCode(context));
+    std::vector<ValuePtr> argsList;
+    for (auto & it : *args) {
+        argsList.push_back(it->generateCode(context));
         if (!argsList.back()) {        // if any arg codegen fail
             return nullptr;
         }
@@ -250,17 +250,20 @@ ValuePtr ArrayIndexAssignmentNode::generateCode(CodeGenerationContext &context) 
 
 ValuePtr BlockNode::generateCode(CodeGenerationContext &context) const {
     ValuePtr value = nullptr;
-    BasicBlock *basicBlock = BasicBlock::Create(context.llvmContext, "codeBlock");
-    context.pushCodeBlock(basicBlock);
-    for (auto it = this->statements.begin(); it != this->statements.end(); ++it)
-        value = (*it)->generateCode(context);
-    context.popCurrentCodeBlock();
+    for (const auto & statement : this->statements)
+        value = statement->generateCode(context);
     return value;
 }
 
 ValuePtr VariableDeclarationNode::generateCode(CodeGenerationContext &context) const {
 
     TypePtr typePtr = context.typeSystem.getLLVMVarType(type->name);
+
+    if(typePtr == nullptr){
+        Log::raiseError("Type " + type->name + " is not defined.", std::cout);
+        return nullptr;
+    }
+
     ValuePtr val = nullptr;
     ValuePtr cd;
     if (type->isArray) {
@@ -268,7 +271,7 @@ ValuePtr VariableDeclarationNode::generateCode(CodeGenerationContext &context) c
         std::vector<uint64_t> arraySizes;
         auto *integer = dynamic_cast<IntegerNode *>(type->arraySize.get());
         arraySize *= integer->value;
-        arraySizes.push_back(integer->value);
+        arraySizes.emplace_back(integer->value);
 
         context.setArraySize(id->name, arraySizes);
         Value *arraySizeValue = IntegerNode(arraySize).generateCode(context);
@@ -279,10 +282,10 @@ ValuePtr VariableDeclarationNode::generateCode(CodeGenerationContext &context) c
         cd = context.builder.CreateAlloca(typePtr);
     }
 
+    context.createSymbol(id->name);
     context.setSymbolType(id->name, type);
     context.setSymbolValue(id->name, cd);
 
-    context.PrintSymTable();
 
     if (assignmentExpr) {
         AssignmentNode assignment(id, assignmentExpr);
@@ -333,8 +336,12 @@ ValuePtr FunctionDeclarationNode::generateCode(CodeGenerationContext &context) c
     if (context.getCurrentReturnValue()) {
         context.builder.CreateRet(context.getCurrentReturnValue());
     } else {
-        Log::raiseError("Function block return value not founded", std::cout);
-        return nullptr;
+        if(retTp->isVoidTy()){
+            context.builder.CreateRetVoid();
+        }else {
+            Log::raiseError("Function block return value not founded", std::cout);
+            //return nullptr;
+        }
     }
 
     context.popCurrentCodeBlock();
@@ -342,24 +349,32 @@ ValuePtr FunctionDeclarationNode::generateCode(CodeGenerationContext &context) c
     return thisFunc;
 }
 
-static ValuePtr CastToBoolean(CodeGenerationContext &context, ValuePtr value) {
 
-    if (ISTYPE(value, Type::IntegerTyID)) {
-        value = context.builder.CreateIntCast(value, Type::getInt1Ty(context.llvmContext), true);
-        return context.builder.CreateICmpNE(value, ConstantInt::get(Type::getInt1Ty(context.llvmContext), 0, true));
-    } else if (ISTYPE(value, Type::DoubleTyID)) {
-        return context.builder.CreateFCmpONE(value, ConstantFP::get(context.llvmContext, APFloat(0.0)));
-    } else {
-        return value;
-    }
-}
 
 ValuePtr IfStatementNode::generateCode(CodeGenerationContext &context) const {
     Value *cond = condition->generateCode(context);
     if (!cond)
         return nullptr;
 
-    cond = CastToBoolean(context, cond);
+    bool castResult = context.typeSystem.castCondition(context, cond);
+
+    if (!castResult){
+        return nullptr;
+    }
+
+    if(cond->getType()->getTypeID() == Type::DoubleTyID){
+        Log::raiseError("Double Value can't be used for condition", std::cout);
+        return nullptr;
+    }else{
+        if(cond->getType()->getTypeID() == Type::IntegerTyID){
+            cond = context.builder.CreateIntCast(cond, Type::getInt1Ty(context.llvmContext), true);
+            cond = context.builder.CreateICmpNE(cond, ConstantInt::get(Type::getInt1Ty(context.llvmContext), 0, true));
+        }else{
+            Log::raiseError("Only Integer type can be used for condtion.", std::cout);
+            return nullptr;
+        }
+    }
+//    cond = CastToBoolean(context, cond);
 
     Function *theFunction = context.builder.GetInsertBlock()->getParent();      // the function where if statement is in
 
@@ -409,7 +424,12 @@ ValuePtr WhileStatementNode::generateCode(CodeGenerationContext &context) const 
     if (!cond)
         return nullptr;
 
-    cond = CastToBoolean(context, cond);
+    bool castResult = context.typeSystem.castCondition(context, cond);
+    if(!castResult){
+        return nullptr;
+    }
+
+//    cond = CastToBoolean(context, cond);
 
     // fall to the loopB
     context.builder.CreateCondBr(cond, loopB, condB);
@@ -420,7 +440,7 @@ ValuePtr WhileStatementNode::generateCode(CodeGenerationContext &context) const 
 
     // execute the again or stop
     cond = condition->generateCode(context);
-    cond = CastToBoolean(context, cond);
+    context.typeSystem.castCondition(context, cond);
     context.builder.CreateCondBr(cond, loopB, condB);
 
     // insert the condB loopB

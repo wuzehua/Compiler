@@ -18,7 +18,7 @@
 using std::string;
 
 typedef llvm::Type* TypePtr;
-//typedef llvm::Value* ValuePtr;
+typedef llvm::Value* ValuePtr;
 
 struct TypeWrapper{
     TypePtr type;

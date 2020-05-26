@@ -2,7 +2,7 @@ all: compiler
 
 OBJS = 	ast.o\
 		context.o \
-		type_system.o \
+		type_helper.o \
 		syn.o \
 		lex.o  \
 		main.o \
@@ -19,7 +19,7 @@ ast.cpp: ast.h
 
 context.cpp: context.h ast.h
 
-type_system.cpp: type_system.h
+type_helper.cpp: type_helper.h
 
 syn.cpp: syn.y
 	bison -d -o $@ $<

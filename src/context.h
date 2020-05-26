@@ -14,7 +14,7 @@
 #include <stack>
 #include "ast.h"
 #include "syn.hpp"
-#include "type_system.h"
+#include "type_helper.h"
 
 using namespace llvm;
 using std::unique_ptr;
@@ -95,7 +95,7 @@ public:
     LLVMContext llvmContext;
     IRBuilder<> builder;
     unique_ptr<Module> theModule;
-    TypeSystem typeSystem;
+    TypeHelper typeSystem;
 
 
     CodeGenerationContext() : builder(llvmContext), typeSystem(llvmContext) {
@@ -138,10 +138,10 @@ public:
         }
     }
 
-    void setSymbolType(const string& name, shared_ptr<TypeNode> value) {
+    void setSymbolType(const string& name, const shared_ptr<TypeNode>& value) {
         Symbol* symbol = findSymbol(name);
         if (symbol != nullptr){
-            symbol->type = std::move(value);
+            symbol->type = value;
         }
     }
 

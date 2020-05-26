@@ -1,27 +1,15 @@
 #pragma once
 
 #include<iostream>
-#include <utility>
 #include<vector>
 #include<string>
 #include<memory>
-#include <llvm/IR/Type.h>
-#include <llvm/IR/Module.h>
-#include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Value.h>
-#include <llvm/IR/IRBuilder.h>
-#include "llvm/ADT/APFloat.h"
-#include "llvm/ADT/STLExtras.h"
 
-#include "llvm/IR/BasicBlock.h"
-#include <llvm/IR/Constants.h>
-#include "llvm/IR/DerivedTypes.h"
-#include "llvm/IR/Function.h"
-#include "llvm/IR/Verifier.h"
 #include <string>
 #include <functional>
 
-#include "context.h"
+//#include "context.h"
 
 extern int dbg_on;
 
@@ -135,13 +123,9 @@ public:
 class IdentifierNode : public ExpressionNode {
 public:
     std::string name;
-    shared_ptr<ExpressionList> arraySize = nullptr;
 
     explicit IdentifierNode(std::string name) : name(std::move(name)) {}
 
-    IdentifierNode(std::string name, ExpressionList *&size) : name(std::move(name)) {
-        arraySize = shared_ptr<ExpressionList>(size);
-    }
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
@@ -285,7 +269,7 @@ public:
 
 class VariableDeclarationNode : public StatementNode {
 public:
-    const shared_ptr<TypeNode> type;
+    shared_ptr<TypeNode> type;
     shared_ptr<IdentifierNode> id;
     shared_ptr<ExpressionNode> assignmentExpr; //Nullable
 

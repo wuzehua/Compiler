@@ -12,15 +12,18 @@ using std::string;
 
 class Log{
 public:
-    static llvm::Value* raiseError(const string& message, std::ostream& os){
+    static llvm::Value* raiseError(const string& message, std::ostream& os = std::cout){
         os<<"[Error] "<<message<<std::endl;
         return nullptr;
     }
 
-    static llvm::Value* raiseWarning(const string& message, std::ostream& os){
+    static llvm::Value* raiseWarning(const string& message, std::ostream& os = std::cout){
         os<<"[Warning] "<<message<<std::endl;
         return nullptr;
     }
 
+    static void raiseMessage(const string& message, std::ostream& os = std::cout){
+        os<<"[Message] "<<message<<std::endl;
+    }
 };
 

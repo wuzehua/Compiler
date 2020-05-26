@@ -1,16 +1,1 @@
 int a;
-
-int fun(){
-    int b:3;
-    int c[10];
-    while b > 0 do {
-        b = b - 1;
-        c[b] = b;
-    }
-    return b;
-}
-
-int main(){
-    fun();
-    return 0;
-}

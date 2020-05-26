@@ -17,7 +17,7 @@
 //#include <llvm/IR/Verifier.h>
 #include "context.h"
 #include "ast.h"
-#include "type_system.h"
+#include "type_helper.h"
 
 using llvm::Type;
 using std::vector;
@@ -39,4 +39,10 @@ void CodeGenerationContext::generateCode(BlockNode* blockNode) {
     pushCodeBlock(block);
     auto value = blockNode->generateCode(*this);
     popCurrentCodeBlock();
+
+    std::cout<<"Finish generating LLVM IR\n";
+
+    PassManager pm;
+    pm.add(createPrintModulePass(outs()));
+    pm.run(*theModule);
 }

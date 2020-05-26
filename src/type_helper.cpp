@@ -2,12 +2,13 @@
 // Created by 郑文浩 on 2020/5/23.
 //
 
-#include "type_system.h"
+#include "type_helper.h"
+#include "context.h"
 
 using llvm::Type;
 using llvm::CastInst;
 
-TypePtr TypeSystem::getLLVMType(shared_ptr<TypeNode>& type) {
+TypePtr TypeHelper::getLLVMType(const shared_ptr<TypeNode>& type) {
     if (type->isArray) {     // array type when allocation, pointer type when pass parameters
         return llvm::PointerType::get(getLLVMVarType(type->name), 0);
     }
@@ -15,33 +16,48 @@ TypePtr TypeSystem::getLLVMType(shared_ptr<TypeNode>& type) {
     return getLLVMVarType(type->name);
 }
 
-TypePtr TypeSystem::getLLVMVarType(const string& typeStr) {
+TypePtr TypeHelper::getLLVMVarType(const string& typeStr) {
     return typeCollection.getVarType(typeStr);
 }
 
 
-bool TypeSystem::castAvailable(ValuePtr v1, ValuePtr v2) {
+bool TypeHelper::castAvailable(ValuePtr v1, ValuePtr v2) {
     return v1->getType()->getTypeID() == v2->getType()->getTypeID() ||
             (v1->getType() == Type::getInt64Ty(llvmContext) && v2->getType() == Type::getDoubleTy(llvmContext)) ||
             (v2->getType() == Type::getInt64Ty(llvmContext) && v1->getType() == Type::getDoubleTy(llvmContext));
 }
 
-bool TypeSystem::isNumber(ValuePtr v) {
+bool TypeHelper::isNumber(ValuePtr v) {
     return v->getType() == Type::getInt64Ty(llvmContext) || v->getType() == Type::getDoubleTy(llvmContext);
 }
 
-bool TypeSystem::isBool(ValuePtr v) {
+bool TypeHelper::isBool(ValuePtr v) {
     return v->getType() == typeCollection.getVarType("bool");
 }
 
-ValuePtr TypeSystem::getDefaultValue(const string& typeStr) {
+ValuePtr TypeHelper::getDefaultValue(const string& typeStr) {
     return typeCollection.getTypeDefault(typeStr);
 }
 
+bool TypeHelper::castCondition(CodeGenerationContext &context, ValuePtr &cond) {
+    if(cond->getType()->getTypeID() == Type::DoubleTyID){
+        Log::raiseError("Double Value can't be used for condition", std::cout);
+        return false;
+    }else{
+        if(cond->getType()->getTypeID() == Type::IntegerTyID){
+            cond = context.builder.CreateIntCast(cond, Type::getInt1Ty(context.llvmContext), true);
+            cond = context.builder.CreateICmpNE(cond, ConstantInt::get(Type::getInt1Ty(context.llvmContext), 0, true));
+        }else{
+            Log::raiseError("Only Integer type can be used for condtion.", std::cout);
+            return false;
+        }
+    }
+
+    return true;
+}
 
 
-
-ValuePtr TypeSystem::cast(ValuePtr value, TypePtr type, BasicBlock *block) {
+ValuePtr TypeHelper::cast(ValuePtr value, TypePtr type, BasicBlock *block) {
     TypePtr origin = value->getType();
     if(origin == type){
         return value;
@@ -63,14 +79,14 @@ ValuePtr TypeSystem::cast(ValuePtr value, TypePtr type, BasicBlock *block) {
 }
 
 
-string TypeSystem::llvmTypeToStr(ValuePtr value) {
+string TypeHelper::llvmTypeToStr(ValuePtr value) {
     if (value)
         return llvmTypeToStr(value->getType());
     else
         return "Value is nullptr";
 }
 
-string TypeSystem::llvmTypeToStr(TypePtr value) {
+string TypeHelper::llvmTypeToStr(TypePtr value) {
     Type::TypeID typeID;
     if (value)
         typeID = value->getTypeID();
@@ -80,8 +96,6 @@ string TypeSystem::llvmTypeToStr(TypePtr value) {
     switch (typeID) {
         case Type::VoidTyID:
             return "VoidTyID";
-        case Type::HalfTyID:
-            return "HalfTyID";
         case Type::DoubleTyID:
             return "DoubleTyID";
         case Type::IntegerTyID:

@@ -6,6 +6,6 @@ set(CMAKE_CXX_STANDARD 17)
 link_directories(/usr/local/opt/llvm/lib)
 include_directories(/usr/local/opt/llvm/include)
 
-set(SRCS ast.h ast.cpp context.h lex.cpp syn.cpp syn.hpp type_system.cpp type_system.h context.cpp type_collection.h log.h main.cpp)
+set(SRCS ast.h ast.cpp context.h lex.cpp syn.cpp syn.hpp type_helper.cpp type_helper.h context.cpp type_collection.h log.h main.cpp)
 
 add_executable(${PROJECT_NAME} ${SRCS})

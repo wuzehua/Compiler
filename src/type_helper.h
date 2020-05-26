@@ -22,7 +22,7 @@ using std::string;
 using llvm::LLVMContext;
 using llvm::BasicBlock;
 
-class TypeSystem {
+class TypeHelper {
 private:
 
     LLVMContext &llvmContext;
@@ -30,9 +30,9 @@ private:
 
 public:
 
-    explicit TypeSystem(LLVMContext &context):llvmContext(context), typeCollection(context) {}
+    explicit TypeHelper(LLVMContext &context): llvmContext(context), typeCollection(context) {}
 
-    TypePtr getLLVMType(shared_ptr<TypeNode>& type);
+    TypePtr getLLVMType(const shared_ptr<TypeNode>& type);
 
     TypePtr getLLVMVarType(const string& typeStr);
 
@@ -40,6 +40,7 @@ public:
 
     ValuePtr cast(ValuePtr value, TypePtr type, BasicBlock *block);
 
+    bool castCondition(CodeGenerationContext& context, ValuePtr& cond);
 
     bool castAvailable(ValuePtr v1, ValuePtr v2);
 
