@@ -18,7 +18,7 @@
 using std::string;
 
 typedef llvm::Type* TypePtr;
-
+//typedef llvm::Value* ValuePtr;
 
 struct TypeWrapper{
     TypePtr type;
@@ -85,7 +85,7 @@ public:
         return it->second.type;
     }
 
-    TypePtr getVarType(const IdentifierNode& type){
+    TypePtr getVarType(const TypeNode& type){
         return getVarType(type.name);
     }
 

@@ -117,12 +117,27 @@ public:
 };
 
 
+class TypeNode: public ExpressionNode{
+public:
+    std::string name;
+    bool isArray = false;
+
+    shared_ptr<ExpressionNode> arraySize = nullptr;
+
+    explicit TypeNode(std::string name) : name(std::move(name)) {}
+
+    TypeNode(std::string name, ExpressionNode *&size): name(std::move(name)), arraySize(size) {}
+
+    void debugPrint(std::string prefix) const override {
+        std::cout << prefix << "TypeNode( name: " << name << ", isArray: " << isArray
+                  << ")\n";
+    }
+};
+
+
 class IdentifierNode : public ExpressionNode {
 public:
     std::string name;
-    bool isType = false;
-    bool isArray = false;
-
     shared_ptr<ExpressionList> arraySize = nullptr;
 
     explicit IdentifierNode(std::string name) : name(std::move(name)) {}
@@ -134,8 +149,7 @@ public:
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
     void debugPrint(std::string prefix) const override {
-        std::cout << prefix << "IdentifierNode( name: " << name << ", isType: " << isType << ", isArray: " << isArray
-                  << ")\n";
+        std::cout << prefix << "IdentifierNode( name: " << name << ")\n";
     }
 };
 
@@ -271,16 +285,16 @@ public:
 
 class VariableDeclarationNode : public StatementNode {
 public:
-    const shared_ptr<IdentifierNode> type;
+    const shared_ptr<TypeNode> type;
     shared_ptr<IdentifierNode> id;
     shared_ptr<ExpressionNode> assignmentExpr; //Nullable
 
-    VariableDeclarationNode(IdentifierNode *type, IdentifierNode *id) : type(shared_ptr<IdentifierNode>(type)),
+    VariableDeclarationNode(TypeNode *type, IdentifierNode *id) : type(shared_ptr<TypeNode>(type)),
                                                                         id(shared_ptr<IdentifierNode>(id)),
                                                                         assignmentExpr(nullptr) {}
 
-    VariableDeclarationNode(IdentifierNode *type, IdentifierNode *id, ExpressionNode *expr) : type(
-            shared_ptr<IdentifierNode>(type)), id(shared_ptr<IdentifierNode>(id)), assignmentExpr(
+    VariableDeclarationNode(TypeNode *type, IdentifierNode *id, ExpressionNode *expr) : type(
+            shared_ptr<TypeNode>(type)), id(shared_ptr<IdentifierNode>(id)), assignmentExpr(
             shared_ptr<ExpressionNode>(expr)) {}
 
 
@@ -319,16 +333,14 @@ public:
 
 class FunctionDeclarationNode : public StatementNode {
 public:
-    shared_ptr<IdentifierNode> type;
+    shared_ptr<TypeNode> type;
     shared_ptr<IdentifierNode> id;
     shared_ptr<VariableList> args;
     shared_ptr<BlockNode> block;
 
-    FunctionDeclarationNode(IdentifierNode *type, IdentifierNode *id, VariableList *args, BlockNode *block) : type(
-            shared_ptr<IdentifierNode>(type)), id(shared_ptr<IdentifierNode>(id)), args(shared_ptr<VariableList>(args)),
-                                                                                                              block(shared_ptr<BlockNode>(
-                                                                                                                      block)) {
-    }
+    FunctionDeclarationNode(TypeNode *type, IdentifierNode *id, VariableList *args, BlockNode *block) : type(
+            shared_ptr<TypeNode>(type)), id(shared_ptr<IdentifierNode>(id)), args(shared_ptr<VariableList>(args)),
+            block(shared_ptr<BlockNode>(block)) {}
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 

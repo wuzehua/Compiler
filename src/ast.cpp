@@ -186,16 +186,18 @@ ValuePtr ArrayIndexAssignmentNode::generateCode(CodeGenerationContext &context) 
 
 ValuePtr BlockNode::generateCode(CodeGenerationContext &context) const {
     ValuePtr value = nullptr;
-
+    BasicBlock* basicBlock = BasicBlock::Create(context.llvmContext, "codeBlock");
+    context.pushCodeBlock(basicBlock);
     for(auto it = this->statements.begin(); it != this->statements.end(); ++it)
         value = (*it)->generateCode(context);
+    context.popCurrentCodeBlock();
     return value;
 }
 
 ValuePtr VariableDeclarationNode::generateCode(CodeGenerationContext &context) const {
     
     TypePtr type = context.typeSystem.getLLVMVarType(this->type->name);
-    ValuePtr val = NULL;
+    ValuePtr val = nullptr;
     Value *cd;
     if(!(this->type->isArray))
     {
@@ -221,18 +223,14 @@ ValuePtr ExpressionStatementNode::generateCode(CodeGenerationContext &context) c
 }
 
 ValuePtr FunctionDeclarationNode::generateCode(CodeGenerationContext &context) const {
-    Type * retTp = context.typeSystem.getLLVMVarType(*(this->type));
+    Type * retTp = context.typeSystem.getLLVMType(type);
     
     std::vector<TypePtr> argsTypeVec;
 
-    for(auto it = this->args->begin(); it != this->args->end(); ++it)
-        argsTypeVec.push_back(context.typeSystem.getLLVMVarType((*it)->type->name));
+    for(auto & it : *this->args)
+        argsTypeVec.emplace_back(context.typeSystem.getLLVMVarType(it->type->name));
 
-    FunctionType *thisFuncType = nullptr;
-    if(argsTypeVec.size() == 0)
-        thisFuncType = FunctionType::get(retTp, false);
-    else
-        thisFuncType = FunctionType::get(retTp, argsTypeVec, false);
+    FunctionType *thisFuncType = FunctionType::get(retTp, argsTypeVec, false);
 
     Function *thisFunc = Function::Create(
         thisFuncType, Function::ExternalLinkage, this->id->name, context.theModule.get());
@@ -253,14 +251,14 @@ ValuePtr FunctionDeclarationNode::generateCode(CodeGenerationContext &context) c
         else
             val = (*args_it)->generateCode(context);
         context.builder.CreateStore(llvmargs_it, val, false);
+        context.createSymbol((*args_it)->id->name);
         context.setFuncArg((*args_it)->id->name, true);
         context.setSymbolValue((*args_it)->id->name, val);
         context.setSymbolType((*args_it)->id->name, (*args_it)->type);
     }
+    //TODO: Not complete
 
-
-
-    return nullptr;
+    return thisFunc;
 }
 
 ValuePtr IfStatementNode::generateCode(CodeGenerationContext &context) const {

@@ -24,7 +24,6 @@ using std::vector;
 using llvm::LLVMContext;
 
 using legacy::PassManager;
-#define ISTYPE(value, id) (value->getType()->getTypeID() == id)
 
 
 void CodeGenerationContext::generateCode(BlockNode* blockNode) {
@@ -35,7 +34,7 @@ void CodeGenerationContext::generateCode(BlockNode* blockNode) {
     FunctionType* mainType = FunctionType::get(Type::getInt64Ty(llvmContext), makeArrayRef(args), false);
     Function* main = Function::Create(mainType, GlobalValue::ExternalLinkage, "main", theModule.get());
 
-    BasicBlock* block = BasicBlock::Create(llvmContext, "entry", main);
+    BasicBlock* block = BasicBlock::Create(llvmContext, "entry");
 
     pushCodeBlock(block);
     auto value = blockNode->generateCode(*this);

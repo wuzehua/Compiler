@@ -113,10 +113,11 @@ union YYSTYPE
     VariableDeclarationNode* var_decl;
     ExpressionList* expr_list;
     VariableList* var_list;
+    TypeNode* type;
     std::string* string;
     int token;
 
-#line 120 "syn.hpp" /* yacc.c:1921  */
+#line 121 "syn.hpp" /* yacc.c:1921  */
 };
 
 typedef union YYSTYPE YYSTYPE;

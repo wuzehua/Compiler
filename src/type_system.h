@@ -13,6 +13,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <memory>
 
 #include "ast.h"
 #include "type_collection.h"
@@ -31,7 +32,7 @@ public:
 
     explicit TypeSystem(LLVMContext &context):llvmContext(context), typeCollection(context) {}
 
-    TypePtr getLLVMVarType(const IdentifierNode &type);
+    TypePtr getLLVMType(shared_ptr<TypeNode>& type);
 
     TypePtr getLLVMVarType(const string& typeStr);
 

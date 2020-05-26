@@ -7,13 +7,12 @@
 using llvm::Type;
 using llvm::CastInst;
 
-TypePtr TypeSystem::getLLVMVarType(const IdentifierNode &type) {
-    assert(type.isType);
-    if (type.isArray) {     // array type when allocation, pointer type when pass parameters
-        return llvm::PointerType::get(getLLVMVarType(type.name), 0);
+TypePtr TypeSystem::getLLVMType(shared_ptr<TypeNode>& type) {
+    if (type->isArray) {     // array type when allocation, pointer type when pass parameters
+        return llvm::PointerType::get(getLLVMVarType(type->name), 0);
     }
 
-    return getLLVMVarType(type.name);
+    return getLLVMVarType(type->name);
 }
 
 TypePtr TypeSystem::getLLVMVarType(const string& typeStr) {

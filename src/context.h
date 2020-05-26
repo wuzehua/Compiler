@@ -24,9 +24,9 @@ using std::vector;
 
 
 struct Symbol{
-    ValuePtr variable;
-    bool isFunctionArgs;
-    shared_ptr<IdentifierNode> type;
+    ValuePtr variable = nullptr;
+    bool isFunctionArgs = false;
+    shared_ptr<TypeNode> type = nullptr;
     vector<uint64_t> size;
 
 };
@@ -51,6 +51,13 @@ struct CodeBlock{
 
         return nullptr;
     }
+
+
+    void createSymbol(const string& name){
+        Symbol symbol;
+        symbolTable.insert({name, symbol});
+    }
+
 };
 
 class CodeGenerationContext {
@@ -73,13 +80,23 @@ private:
         return symbol;
     }
 
+    [[nodiscard]]
+    Symbol* findSymbolInCurrentBlock(const string& name) const {
+        Symbol* symbol = nullptr;
+        if(currentBlock != nullptr){
+            symbol = currentBlock->findSymbol(name);
+        }
+        return symbol;
+    }
+
+
+
 public:
     LLVMContext llvmContext;
     IRBuilder<> builder;
     unique_ptr<Module> theModule;
     TypeSystem typeSystem;
 
-    stack<CodeBlock> codeBlockStack;
 
     CodeGenerationContext() : builder(llvmContext), typeSystem(llvmContext) {
         theModule = std::make_unique<Module>("main", this->llvmContext);
@@ -94,7 +111,7 @@ public:
     }
 
     [[nodiscard]]
-    shared_ptr<IdentifierNode> getSymbolType(const string& name) const {
+    shared_ptr<TypeNode> getSymbolType(const string& name) const {
         Symbol* symbol = findSymbol(name);
         return symbol == nullptr ? nullptr : symbol->type;
     }
@@ -106,6 +123,14 @@ public:
         return symbol == nullptr ? false : symbol->isFunctionArgs;
     }
 
+    void createSymbol(const string& name){
+        assert(currentBlock != nullptr);
+        Symbol* symbol = findSymbolInCurrentBlock(name);
+        if(symbol == nullptr){
+            currentBlock->createSymbol(name);
+        }
+    }
+
     void setSymbolValue(const string& name, ValuePtr value) {
         Symbol* symbol = findSymbol(name);
         if (symbol != nullptr){
@@ -113,7 +138,7 @@ public:
         }
     }
 
-    void setSymbolType(const string& name, shared_ptr<IdentifierNode> value) {
+    void setSymbolType(const string& name, shared_ptr<TypeNode> value) {
         Symbol* symbol = findSymbol(name);
         if (symbol != nullptr){
             symbol->type = std::move(value);
@@ -139,11 +164,10 @@ public:
         auto codeBlock = new CodeBlock(block);
         if(globalBlock == nullptr){
             globalBlock = codeBlock;
-            currentBlock = codeBlock;
         }else{
             codeBlock->next = currentBlock;
-            currentBlock = codeBlock;
         }
+        currentBlock = codeBlock;
     }
 
     void popCurrentCodeBlock(){
@@ -194,7 +218,7 @@ public:
                 const Symbol& symbol = it.second;
                 std::cout<<it.first<<": Var("<<symbol.variable<<") isFuncArgs("<<symbol.isFunctionArgs<<") ";
                 if(symbol.type){
-                    std::cout<<"Type(name:"<<symbol.type->name<<", isArray:"<<symbol.type->isArray<<", isType:"<<symbol.type->isType<<")\n";
+                    std::cout<<"Type(name:"<<symbol.type->name<<", isArray:"<<symbol.type->isArray<<")\n";
                 }
             }
 

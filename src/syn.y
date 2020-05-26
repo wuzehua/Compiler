@@ -26,6 +26,7 @@
     VariableDeclarationNode* var_decl;
     ExpressionList* expr_list;
     VariableList* var_list;
+    TypeNode* type;
     std::string* string;
     int token;
 }
@@ -43,11 +44,12 @@
 %type <stat> statement declaration funDeclaration expressionStmt selectionStmt iterationStmt returnStmt
 %type <expr> constant mutable immutable simpleExpression expression andExpression sumExpression unaryExpression unaryRelExpression relExpression mulExpression call factor
 %type <var_decl> paramType varDeclaration
-%type <id> typeSpecifier identifier
+%type <id> identifier
 %type <array_index> arrayElement
 %type <var_list> paramList params
 %type <expr_list> argList
 %type <token> relop sumop mulop
+%type <type> typeSpecifier
 
 %left PLUS MINUS
 %left MUL DIV
@@ -80,24 +82,17 @@ varDeclaration: typeSpecifier identifier SEMI {
             |   typeSpecifier identifier COLON simpleExpression SEMI{
                     $$ = new VariableDeclarationNode($1, $2, $4);
                 }
-            |   typeSpecifier identifier LBRACKET INTEGER RBRACKET SEMI {
+            |   typeSpecifier identifier LBRACKET expression RBRACKET SEMI {
                 $1->isArray = true;
-                int64_t value; 
-                sscanf($4->c_str(), "%ld", &value); 
-                auto in = new IntegerNode(value); 
-                delete $4;
-                ExpressionList* exprl = new ExpressionList();
-
-                exprl->emplace_back(shared_ptr<ExpressionNode>(in));
-                $1->arraySize = shared_ptr<ExpressionList>(exprl);
+                $1->arraySize = shared_ptr<ExpressionNode>($4);
                 $$ = new VariableDeclarationNode($1, $2);
             }
             ;
 
-typeSpecifier: INT { $$ = new IdentifierNode(*$1); $$->isType = true; delete $1; } 
-            | BOOL { $$ = new IdentifierNode(*$1); $$->isType = true; delete $1; }
-            | CHAR { $$ = new IdentifierNode(*$1); $$->isType = true; delete $1; }
-            | DOUBLE { $$ = new IdentifierNode(*$1); $$->isType = true; delete $1; }
+typeSpecifier: INT { $$ = new TypeNode(*$1); delete $1; }
+            | BOOL { $$ = new TypeNode(*$1); delete $1; }
+            | CHAR { $$ = new TypeNode(*$1); delete $1; }
+            | DOUBLE { $$ = new TypeNode(*$1); delete $1; }
             ;
 
 codeBlock: LBRACE RBRACE { $$ = new BlockNode();}
@@ -105,7 +100,10 @@ codeBlock: LBRACE RBRACE { $$ = new BlockNode();}
         ;    
 
 funDeclaration: typeSpecifier identifier LPAR params RPAR codeBlock { $$ = new FunctionDeclarationNode($1, $2, $4, $6); }
-    | identifier LPAR params RPAR codeBlock { $$ = new FunctionDeclarationNode(nullptr, $1, $3, $5); }
+    | identifier LPAR params RPAR codeBlock {
+    		TypeNode* type = new TypeNode("void");
+    		$$ = new FunctionDeclarationNode(type, $1, $3, $5);
+    	}
     ;
     
 params:  { $$ = new VariableList(); }
