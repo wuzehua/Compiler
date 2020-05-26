@@ -4,7 +4,6 @@
 #include <utility>
 #include<vector>
 #include<string>
-#include<llvm/IR/Value.h>
 #include<memory>
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Module.h>
@@ -22,7 +21,6 @@
 #include <string>
 #include <functional>
 
-#include "ast.h"
 #include "context.h"
 
 extern int dbg_on;
@@ -117,7 +115,7 @@ public:
 };
 
 
-class TypeNode: public ExpressionNode{
+class TypeNode : public ExpressionNode {
 public:
     std::string name;
     bool isArray = false;
@@ -126,11 +124,10 @@ public:
 
     explicit TypeNode(std::string name) : name(std::move(name)) {}
 
-    TypeNode(std::string name, ExpressionNode *&size): name(std::move(name)), arraySize(size) {}
+    TypeNode(std::string name, ExpressionNode *&size) : name(std::move(name)), arraySize(size) {}
 
     void debugPrint(std::string prefix) const override {
-        std::cout << prefix << "TypeNode( name: " << name << ", isArray: " << isArray
-                  << ")\n";
+        std::cout << prefix << "TypeNode( name: " << name << ", isArray: " << isArray << ")\n";
     }
 };
 
@@ -184,7 +181,7 @@ public:
     explicit FunctionCallNode(IdentifierNode *id) : id(shared_ptr<IdentifierNode>(id)), args(nullptr) {}
 
     FunctionCallNode(IdentifierNode *id, ExpressionList *args) : id(shared_ptr<IdentifierNode>(id)),
-                                                               args(shared_ptr<ExpressionList>(args)) {}
+                                                                 args(shared_ptr<ExpressionList>(args)) {}
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
@@ -210,6 +207,9 @@ public:
         this->id = shared_ptr<IdentifierNode>(id);
         this->expr = shared_ptr<ExpressionNode>(expr);
     }
+
+    AssignmentNode(shared_ptr<IdentifierNode> id, shared_ptr<ExpressionNode> expr) : id(std::move(id)),
+                                                                                     expr(std::move(expr)) {}
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
@@ -290,8 +290,8 @@ public:
     shared_ptr<ExpressionNode> assignmentExpr; //Nullable
 
     VariableDeclarationNode(TypeNode *type, IdentifierNode *id) : type(shared_ptr<TypeNode>(type)),
-                                                                        id(shared_ptr<IdentifierNode>(id)),
-                                                                        assignmentExpr(nullptr) {}
+                                                                  id(shared_ptr<IdentifierNode>(id)),
+                                                                  assignmentExpr(nullptr) {}
 
     VariableDeclarationNode(TypeNode *type, IdentifierNode *id, ExpressionNode *expr) : type(
             shared_ptr<TypeNode>(type)), id(shared_ptr<IdentifierNode>(id)), assignmentExpr(
@@ -340,7 +340,8 @@ public:
 
     FunctionDeclarationNode(TypeNode *type, IdentifierNode *id, VariableList *args, BlockNode *block) : type(
             shared_ptr<TypeNode>(type)), id(shared_ptr<IdentifierNode>(id)), args(shared_ptr<VariableList>(args)),
-            block(shared_ptr<BlockNode>(block)) {}
+                                                                                                        block(shared_ptr<BlockNode>(
+                                                                                                                block)) {}
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
