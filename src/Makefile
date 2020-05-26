@@ -9,7 +9,7 @@ OBJS = 	ast.o\
 
 LLVMCONFIG = llvm-config
 CPPFLAGS = `$(LLVMCONFIG) --cppflags` -std=c++17
-LDFLAGS = `$(LLVMCONFIG) --ldflags` -lpthread -ldl -lz -lncurses -rdynamic -L/usr/lib
+LDFLAGS = `$(LLVMCONFIG) --ldflags` -L/usr/lib
 LIBS = `$(LLVMCONFIG) --libs`
 
 clean:
