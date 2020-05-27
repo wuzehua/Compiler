@@ -10,7 +10,7 @@ OBJS = 	ast.o\
 LLVMCONFIG = llvm-config
 CPPFLAGS = `$(LLVMCONFIG) --cppflags` -std=c++17
 LDFLAGS = `$(LLVMCONFIG) --ldflags` -L/usr/lib
-LIBS = `$(LLVMCONFIG) --libs`
+LIBS = `$(LLVMCONFIG) --libs --system-libs`
 BUILD_DIR = ../build
 
 clean:
