@@ -32,9 +32,9 @@ void CodeGenerationContext::generateCode(BlockNode* blockNode) {
     vector<Type*> args;
 
     FunctionType* mainType = FunctionType::get(Type::getInt64Ty(llvmContext), makeArrayRef(args), false);
-    Function* main = Function::Create(mainType, GlobalValue::ExternalLinkage, "main", theModule.get());
+    Function* main = Function::Create(mainType, GlobalValue::InternalLinkage, "main", theModule.get());
 
-    BasicBlock* block = BasicBlock::Create(llvmContext, "entry");
+    BasicBlock* block = BasicBlock::Create(llvmContext, "entry", main);
 
     pushCodeBlock(block);
     auto value = blockNode->generateCode(*this);

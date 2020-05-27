@@ -54,8 +54,10 @@ struct CodeBlock{
 
 
     void createSymbol(const string& name){
+        Log::raiseMessage("Creating Symbol " + name, std::cout);
         Symbol symbol;
         symbolTable.insert({name, symbol});
+        Log::raiseMessage("Finish creating symbol", std::cout);
     }
 
 };

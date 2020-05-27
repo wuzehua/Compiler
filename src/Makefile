@@ -11,9 +11,10 @@ LLVMCONFIG = llvm-config
 CPPFLAGS = `$(LLVMCONFIG) --cppflags` -std=c++17
 LDFLAGS = `$(LLVMCONFIG) --ldflags` -L/usr/lib
 LIBS = `$(LLVMCONFIG) --libs`
+BUILD_DIR = ../build
 
 clean:
-	$(RM) -rf test compiler *.output $(OBJS)
+	$(RM) -rf test compiler *.output $(BUILD_DIR)/$(OBJS)
 
 ast.cpp: ast.h
 
@@ -30,8 +31,8 @@ lex.cpp: lex.l syn.hpp
 	flex -o $@ $<
 
 %.o: %.cpp
-	g++ -c $(CPPFLAGS) -o $@ $<
+	g++ -c $(CPPFLAGS) -o $(BUILD_DIR)/$@ $<
 
 compiler: $(OBJS)
-	g++ $(CPPFLAGS) -o $@ $(OBJS) $(LIBS) $(LDFLAGS)
+	g++ $(CPPFLAGS) -o $(BUILD_DIR)/$@ $(BUILD_DIR)/*.o $(LIBS) $(LDFLAGS)
 

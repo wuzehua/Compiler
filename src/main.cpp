@@ -37,7 +37,7 @@ int main(){
 
     
     if(programBlock != nullptr) {
-        programBlock->debugPrint("");
+//        programBlock->debugPrint("");
     }
 
     CodeGenerationContext maincontext;

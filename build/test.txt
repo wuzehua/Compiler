@@ -1,0 +1,5 @@
+int foo(){
+    int a[10];
+    a[0] = 10;
+    return 0;
+}

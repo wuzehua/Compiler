@@ -18,7 +18,7 @@
 
 ValuePtr IntegerNode::generateCode(CodeGenerationContext &context) const {
     Log::raiseMessage("Generating Integer Const");
-    Type *type = Type::getInt32Ty(context.llvmContext); //设置返回值的类型为int32
+    Type *type = Type::getInt64Ty(context.llvmContext); //设置返回值的类型为int32
     return llvm::ConstantInt::get(type, value, true);
 }
 
@@ -169,13 +169,16 @@ ValuePtr FunctionCallNode::generateCode(CodeGenerationContext &context) const {
     if (!calleeF) {
         Log::raiseError("Function not found", std::cout);
     }
-    if (calleeF->arg_size() != args->size()) {
+
+    if((calleeF->arg_size() != 0 && !args) || (args && calleeF->arg_size() != args->size())){
         Log::raiseError("Function args number not match, " + id->name + " requires " + std::to_string(calleeF->size()) +
-                        "args, but " + std::to_string(args->size()) + "args are given", std::cout);
+                        "args, but " + std::to_string(args ? args->size() : 0) + "args are given", std::cout);
     }
+
+
     std::vector<ValuePtr> argsList;
     for (auto & it : *args) {
-        argsList.push_back(it->generateCode(context));
+        argsList.emplace_back(it->generateCode(context));
         if (!argsList.back()) {        // if any arg codegen fail
             return nullptr;
         }
@@ -257,6 +260,8 @@ ValuePtr BlockNode::generateCode(CodeGenerationContext &context) const {
 
 ValuePtr VariableDeclarationNode::generateCode(CodeGenerationContext &context) const {
 
+    Log::raiseMessage("Start generating variable declaration node for " + id->name, std::cout);
+
     TypePtr typePtr = context.typeSystem.getLLVMVarType(type->name);
 
     if(typePtr == nullptr){
@@ -264,7 +269,8 @@ ValuePtr VariableDeclarationNode::generateCode(CodeGenerationContext &context) c
         return nullptr;
     }
 
-    ValuePtr val = nullptr;
+    Log::raiseMessage("Type is " + TypeHelper::llvmTypeToStr(typePtr), std::cout);
+
     ValuePtr cd;
     if (type->isArray) {
         uint64_t arraySize = 1;
@@ -279,8 +285,12 @@ ValuePtr VariableDeclarationNode::generateCode(CodeGenerationContext &context) c
         cd = context.builder.CreateAlloca(arrayType, arraySizeValue, "arraytmp");
 
     } else {
-        cd = context.builder.CreateAlloca(typePtr);
+        Log::raiseMessage("Creating Alloca for " + id->name, std::cout);
+        cd = context.builder.CreateAlloca(typePtr, nullptr,id->name);
+        Log::raiseMessage("Finish creating Alloca for " + id->name, std::cout);
     }
+
+    Log::raiseMessage("Finish creating IR for variable " + id->name, std::cout);
 
     context.createSymbol(id->name);
     context.setSymbolType(id->name, type);
@@ -309,7 +319,7 @@ ValuePtr FunctionDeclarationNode::generateCode(CodeGenerationContext &context) c
 
     FunctionType *thisFuncType = FunctionType::get(retTp, argsTypeVec, false);
 
-    Function *thisFunc = Function::Create(thisFuncType, Function::ExternalLinkage, this->id->name,
+    Function *thisFunc = Function::Create(thisFuncType, Function::InternalLinkage, this->id->name,
                                           context.theModule.get());
 
     BasicBlock *funcBlock = BasicBlock::Create(context.llvmContext, "entry", thisFunc);
