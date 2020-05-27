@@ -33,13 +33,11 @@ struct Symbol{
 
 struct CodeBlock{
     BasicBlock* block;
-    ValuePtr returnValue;
     map<string, struct Symbol> symbolTable;
     struct CodeBlock* next;
 
     explicit CodeBlock(BasicBlock* block):
                 block(block),
-                returnValue(nullptr),
                 next(nullptr){}
 
     [[nodiscard]]
@@ -97,13 +95,21 @@ public:
     LLVMContext llvmContext;
     IRBuilder<> builder;
     unique_ptr<Module> theModule;
-    TypeHelper typeSystem;
+    TypeHelper typeHelper;
 
 
-    CodeGenerationContext() : builder(llvmContext), typeSystem(llvmContext) {
+    CodeGenerationContext() : builder(llvmContext), typeHelper(llvmContext) {
         theModule = std::make_unique<Module>("main", this->llvmContext);
         globalBlock = nullptr;
         currentBlock = nullptr;
+    }
+
+    ~CodeGenerationContext(){
+        while(currentBlock != nullptr){
+            auto temp = currentBlock;
+            currentBlock = currentBlock->next;
+            delete temp;
+        }
     }
 
     [[nodiscard]]
@@ -154,7 +160,9 @@ public:
         }
     }
 
-
+    bool isInGlobalBlock(){
+        return globalBlock != nullptr && currentBlock == globalBlock;
+    }
 
 
     [[nodiscard]]
@@ -183,17 +191,6 @@ public:
         }
     }
 
-
-    void setCurrentReturnValue(ValuePtr value) {
-        if(currentBlock != nullptr){
-            currentBlock->returnValue = value;
-        }
-    }
-
-    ValuePtr getCurrentReturnValue() {
-        return currentBlock != nullptr ? currentBlock->returnValue : nullptr;
-    }
-
     void setArraySize(const string& name, std::vector<uint64_t> value) {
         Symbol* symbol = findSymbol(name);
         if(symbol != nullptr){
@@ -216,7 +213,7 @@ public:
             }else {
                 std::cout << "[Block " << index << "]\n";
             }
-            for(auto & it : currentBlock->symbolTable){
+            for(auto & it : temp->symbolTable){
                 const Symbol& symbol = it.second;
                 std::cout<<it.first<<": Var("<<symbol.variable<<") isFuncArgs("<<symbol.isFunctionArgs<<") ";
                 if(symbol.type){
@@ -231,5 +228,8 @@ public:
     }
 
     void generateCode(BlockNode* blockNode);
+
+    void exportToObj(const string& filename);
+
 
 };

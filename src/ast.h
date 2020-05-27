@@ -321,11 +321,13 @@ public:
     shared_ptr<IdentifierNode> id;
     shared_ptr<VariableList> args;
     shared_ptr<BlockNode> block;
+    bool external;
 
-    FunctionDeclarationNode(TypeNode *type, IdentifierNode *id, VariableList *args, BlockNode *block) : type(
+    FunctionDeclarationNode(TypeNode *type, IdentifierNode *id, VariableList *args, BlockNode *block, bool external = false) : type(
             shared_ptr<TypeNode>(type)), id(shared_ptr<IdentifierNode>(id)), args(shared_ptr<VariableList>(args)),
                                                                                                         block(shared_ptr<BlockNode>(
-                                                                                                                block)) {}
+                                                                                                                block)) ,
+                                                                                                                external(external){}
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 

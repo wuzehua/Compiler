@@ -104,6 +104,13 @@ funDeclaration: typeSpecifier identifier LPAR params RPAR codeBlock { $$ = new F
     		TypeNode* type = new TypeNode("void");
     		$$ = new FunctionDeclarationNode(type, $1, $3, $5);
     	}
+    | EXTERN typeSpecifier identifier LPAR params RPAR SEMI {
+    		$$ = new FunctionDeclarationNode($2, $3, $5, nullptr, true);
+    	}
+    | EXTERN identifier LPAR params RPAR SEMI{
+    		TypeNode* type = new TypeNode("void");
+    		$$ = new FunctionDeclarationNode(type, $2, $4, nullptr, true);
+   	}
     ;
     
 params:  { $$ = new VariableList(); }
