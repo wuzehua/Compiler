@@ -40,7 +40,7 @@ public:
 
     ValuePtr cast(ValuePtr value, TypePtr type, BasicBlock *block);
 
-    bool castCondition(CodeGenerationContext& context, ValuePtr& cond);
+    static ValuePtr castCondition(CodeGenerationContext& context, ValuePtr cond);
 
     bool castAvailable(ValuePtr v1, ValuePtr v2);
 

@@ -15,7 +15,6 @@
 #include "context.h"
 
 
-
 ValuePtr IntegerNode::generateCode(CodeGenerationContext &context) const {
     Log::raiseMessage("Generating Integer Const");
     Type *type = Type::getInt64Ty(context.llvmContext); //设置返回值的类型为int32
@@ -41,18 +40,18 @@ ValuePtr BoolNode::generateCode(CodeGenerationContext &context) const {
 }
 
 ValuePtr IdentifierNode::generateCode(CodeGenerationContext &context) const {
-    Value *value = context.getSymbolValue(name);
+    ValuePtr value = context.getSymbolValue(name);
     if (!value) {
         Log::raiseError("Unknown variable name " + this->name, std::cout);
         return nullptr;
     }
+
     if (value->getType()->isPointerTy()) {
         auto valuePtr = context.builder.CreateLoad(value, "valuePtr");
         if (valuePtr->getType()->isArrayTy()) {
-            std::vector<Value *> index;
-            index.push_back(ConstantInt::get(Type::getInt32PtrTy(context.llvmContext), 0, false));
-            auto ptr = context.builder.CreateInBoundsGEP(value, index, "valuePtr");
-            return ptr;
+            std::vector<ValuePtr> index;
+            index.emplace_back(ConstantInt::get(Type::getInt32PtrTy(context.llvmContext), 0, false));
+            return context.builder.CreateInBoundsGEP(value, index, "valuePtr");
         }
     }
     return context.builder.CreateLoad(value, false, "");
@@ -168,20 +167,24 @@ ValuePtr FunctionCallNode::generateCode(CodeGenerationContext &context) const {
     Function *calleeF = context.theModule->getFunction(id->name);
     if (!calleeF) {
         Log::raiseError("Function not found", std::cout);
+        return nullptr;
     }
 
-    if((calleeF->arg_size() != 0 && !args) || (args && calleeF->arg_size() != args->size())){
+    if ((calleeF->arg_size() != 0 && !args) || (args && calleeF->arg_size() != args->size())) {
         Log::raiseError("Function args number not match, " + id->name + " requires " + std::to_string(calleeF->size()) +
                         "args, but " + std::to_string(args ? args->size() : 0) + "args are given", std::cout);
+        return nullptr;
     }
 
-
     std::vector<ValuePtr> argsList;
-    if(args) {
+
+    if (args) {
         for (auto &it : *args) {
-            argsList.emplace_back(it->generateCode(context));
-            if (!argsList.back()) {        // if any arg codegen fail
+            auto argPtr = it->generateCode(context);
+            if (!argPtr) {
                 return nullptr;
+            } else {
+                argsList.emplace_back(argPtr);
             }
         }
     }
@@ -195,6 +198,7 @@ ValuePtr AssignmentNode::generateCode(CodeGenerationContext &context) const {
         Log::raiseError("Undefined variable", std::cout);
         return nullptr;
     }
+
     ValuePtr exp = expr->generateCode(context);
     exp = context.typeHelper.cast(exp, context.typeHelper.getLLVMVarType(context.getSymbolType(id->name)->name),
                                   context.getCurrentBasicBlock());
@@ -229,7 +233,8 @@ ValuePtr ArrayIndexNode::generateCode(CodeGenerationContext &context) const {
         return nullptr;
     }
 
-    return context.builder.CreateAlignedLoad(context.builder.CreateInBoundsGEP(var, indices, "elementPtr"), MaybeAlign());
+    return context.builder.CreateAlignedLoad(context.builder.CreateInBoundsGEP(var, indices, "elementPtr"),
+                                             MaybeAlign());
 }
 
 ValuePtr ArrayIndexAssignmentNode::generateCode(CodeGenerationContext &context) const {
@@ -253,13 +258,13 @@ ValuePtr ArrayIndexAssignmentNode::generateCode(CodeGenerationContext &context) 
 
     auto val = expr->generateCode(context);
 
-    return context.builder.CreateAlignedStore(val,
-                                              context.builder.CreateInBoundsGEP(var, indices, "elementPtr"), MaybeAlign());
+    return context.builder.CreateAlignedStore(val, context.builder.CreateInBoundsGEP(var, indices, "elementPtr"),
+                                              MaybeAlign());
 }
 
 ValuePtr BlockNode::generateCode(CodeGenerationContext &context) const {
     ValuePtr value = nullptr;
-    for (const auto & statement : this->statements)
+    for (const auto &statement : this->statements)
         value = statement->generateCode(context);
     return value;
 }
@@ -270,7 +275,7 @@ ValuePtr VariableDeclarationNode::generateCode(CodeGenerationContext &context) c
 
     TypePtr typePtr = context.typeHelper.getLLVMVarType(type->name);
 
-    if(typePtr == nullptr){
+    if (typePtr == nullptr) {
         Log::raiseError("Type " + type->name + " is not defined.", std::cout);
         return nullptr;
     }
@@ -292,11 +297,11 @@ ValuePtr VariableDeclarationNode::generateCode(CodeGenerationContext &context) c
         cd = context.builder.CreateAlloca(arrayType, arraySizeValue, "arraytmp");
 
     } else {
-        if(context.isInGlobalBlock()){
+        if (context.isInGlobalBlock()) {
             auto globalVar = new GlobalVariable(typePtr, false, GlobalValue::InternalLinkage);
             context.theModule->getGlobalList().push_back(globalVar);
             cd = globalVar;
-        }else {
+        } else {
             Log::raiseMessage("Creating Alloca for " + id->name, std::cout);
             cd = context.builder.CreateAlloca(typePtr, nullptr, id->name);
             Log::raiseMessage("Finish creating Alloca for " + id->name, std::cout);
@@ -334,7 +339,7 @@ ValuePtr FunctionDeclarationNode::generateCode(CodeGenerationContext &context) c
 
     Function *thisFunc = Function::Create(thisFuncType, Function::ExternalLinkage, this->id->name,
                                           context.theModule.get());
-    if(external){
+    if (external) {
         return thisFunc;
     }
 
@@ -348,7 +353,8 @@ ValuePtr FunctionDeclarationNode::generateCode(CodeGenerationContext &context) c
         llvmargs_it->setName((*args_it)->id->name);
         ValuePtr val;
         if ((*args_it)->type->isArray)
-            val = context.builder.CreateAlloca(PointerType::get(context.typeHelper.getLLVMVarType((*args_it)->type->name), 0), 0U);
+            val = context.builder.CreateAlloca(
+                    PointerType::get(context.typeHelper.getLLVMVarType((*args_it)->type->name), 0), 0U);
         else
             val = (*args_it)->generateCode(context);
         context.builder.CreateStore(llvmargs_it, val, false);
@@ -378,31 +384,16 @@ ValuePtr FunctionDeclarationNode::generateCode(CodeGenerationContext &context) c
 }
 
 
-
 ValuePtr IfStatementNode::generateCode(CodeGenerationContext &context) const {
-    Value *cond = condition->generateCode(context);
+    ValuePtr cond = condition->generateCode(context);
     if (!cond)
         return nullptr;
 
-    bool castResult = context.typeHelper.castCondition(context, cond);
+    cond = TypeHelper::castCondition(context, cond);
 
-    if (!castResult){
+    if (!cond) {
         return nullptr;
     }
-
-    if(cond->getType()->getTypeID() == Type::DoubleTyID){
-        Log::raiseError("Double Value can't be used for condition", std::cout);
-        return nullptr;
-    }else{
-        if(cond->getType()->getTypeID() == Type::IntegerTyID){
-            cond = context.builder.CreateIntCast(cond, Type::getInt1Ty(context.llvmContext), true);
-            cond = context.builder.CreateICmpNE(cond, ConstantInt::get(Type::getInt1Ty(context.llvmContext), 0, true));
-        }else{
-            Log::raiseError("Only Integer type can be used for condtion.", std::cout);
-            return nullptr;
-        }
-    }
-//    cond = CastToBoolean(context, cond);
 
     Function *theFunction = context.builder.GetInsertBlock()->getParent();
 
@@ -422,21 +413,21 @@ ValuePtr IfStatementNode::generateCode(CodeGenerationContext &context) const {
     context.popCurrentCodeBlock();
     thenB = context.builder.GetInsertBlock();
 
-    if (!thenB->getTerminator()) {       //
+    if (!thenB->getTerminator()) {
         context.builder.CreateBr(condB);
     }
 
     if (falseBlock) {
-        theFunction->getBasicBlockList().push_back(elseB);    //
-        context.builder.SetInsertPoint(elseB);            //
+        theFunction->getBasicBlockList().push_back(elseB);
+        context.builder.SetInsertPoint(elseB);
         context.pushCodeBlock(elseB);
         falseBlock->generateCode(context);
         context.popCurrentCodeBlock();
         context.builder.CreateBr(condB);
     }
 
-    theFunction->getBasicBlockList().push_back(condB);        //
-    context.builder.SetInsertPoint(condB);        //
+    theFunction->getBasicBlockList().push_back(condB);
+    context.builder.SetInsertPoint(condB);
 
     return nullptr;
 }
@@ -452,12 +443,10 @@ ValuePtr WhileStatementNode::generateCode(CodeGenerationContext &context) const 
     if (!cond)
         return nullptr;
 
-    bool castResult = context.typeHelper.castCondition(context, cond);
-    if(!castResult){
+    cond = TypeHelper::castCondition(context, cond);
+    if (!cond) {
         return nullptr;
     }
-
-//    cond = CastToBoolean(context, cond);
 
     // fall to the loopB
     context.builder.CreateCondBr(cond, loopB, condB);
@@ -468,7 +457,7 @@ ValuePtr WhileStatementNode::generateCode(CodeGenerationContext &context) const 
 
     // execute the again or stop
     cond = condition->generateCode(context);
-    context.typeHelper.castCondition(context, cond);
+    cond = TypeHelper::castCondition(context, cond);
     context.builder.CreateCondBr(cond, loopB, condB);
 
     // insert the condB loopB

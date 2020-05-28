@@ -3,9 +3,11 @@ project(Compiler)
 
 set(CMAKE_CXX_STANDARD 17)
 
-link_directories(/usr/local/opt/llvm/lib)
-include_directories(/usr/local/opt/llvm/include)
+find_package(LLVM REQUIRED CONFIG)
 
+include_directories(${LLVM_INCLUDE_DIRS})
+link_directories(/usr/local/opt/llvm/lib)
+add_definitions(${LLVM_DEFINITIONS})
 
 
 set(SRCS
@@ -23,12 +25,9 @@ set(SRCS
         main.cpp
         )
 
-set(LLVM_LINK_COMPONENTS Core native Support)
+set(LLVM_LINK_COMPONENTS all)
+
+llvm_map_components_to_libnames(llvm_libs ${LLVM_LINK_COMPONENTS})
 
 add_executable(${PROJECT_NAME} ${SRCS})
-target_link_libraries(${PROJECT_NAME}
-
-        LLVMCore
-        LLVMSupport
-        LLVMCodeGen
-        )
+target_link_libraries(${PROJECT_NAME} ${llvm_libs})
