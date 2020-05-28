@@ -227,11 +227,7 @@ ValuePtr ArrayIndexNode::generateCode(CodeGenerationContext &context) const {
 
     auto value = index->generateCode(context);
     ArrayRef<ValuePtr> indices;
-    if (context.isFuncArg(id->name)) {
-        var = context.builder.CreateLoad(var, "arrayPtr");
-        //TODO fix assignment bug
-//        indices = {value};
-    } else if (var->getType()->isPointerTy()) {
+    if (var->getType()->isPointerTy()) {
         indices = {ConstantInt::get(Type::getInt64Ty(context.llvmContext), 0), value};
     } else {
         Log::raiseError(id->name + " is not an array", std::cout);
@@ -299,7 +295,7 @@ ValuePtr VariableDeclarationNode::generateCode(CodeGenerationContext &context) c
         auto arrayType = ArrayType::get(context.typeHelper.getLLVMVarType(type->name), arraySize);
         cd = context.builder.CreateAlloca(arrayType, arraySizePtr, "arraytmp");
 
-        context.setArraySize(id->name, arraySize);
+        // context.setArraySize(id->name, arraySize);
 
     } else {
 
@@ -375,11 +371,13 @@ ValuePtr FunctionDeclarationNode::generateCode(CodeGenerationContext &context) c
 
     block->generateCode(context);
     
-    if(retTp->getTypeID() == Type::VoidTyID){
-        context.builder.CreateRetVoid();
-    }else{
-        ValuePtr retVal = context.typeHelper.getDefaultValue(type->name);
-        context.builder.CreateRet(retVal);
+    if(context.getCurrentBasicBlock()->getTerminator() == nullptr){
+        if(retTp->getTypeID() == Type::VoidTyID){
+            context.builder.CreateRetVoid();
+        }else{
+            ValuePtr retVal = context.typeHelper.getDefaultValue(type->name);
+            context.builder.CreateRet(retVal);
+        }
     }
 
     context.popCurrentCodeBlock();
@@ -416,7 +414,9 @@ ValuePtr IfStatementNode::generateCode(CodeGenerationContext &context) const {
     trueBlock->generateCode(context);
     context.popCurrentCodeBlock();
 
-    context.builder.CreateBr(condB);
+    if(thenB->getTerminator() == nullptr){
+        context.builder.CreateBr(condB);
+    }
     thenB = context.builder.GetInsertBlock();
 
 
@@ -431,6 +431,7 @@ ValuePtr IfStatementNode::generateCode(CodeGenerationContext &context) const {
 
     theFunction->getBasicBlockList().push_back(condB);
     context.builder.SetInsertPoint(condB);
+    context.setCurrentBlock(condB);
 
     return nullptr;
 }
@@ -473,6 +474,7 @@ ValuePtr WhileStatementNode::generateCode(CodeGenerationContext &context) const 
 
     theFunction->getBasicBlockList().push_back(finalB);
     context.builder.SetInsertPoint(finalB);
+    context.setCurrentBlock(finalB);
 
     return nullptr;
 }

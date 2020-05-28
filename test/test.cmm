@@ -1,7 +1,6 @@
 extern int printInt(int x);
 extern int inputInt();
 
-int a;
 
 int fib(int x){
     if x > 1 then{
@@ -12,7 +11,15 @@ int fib(int x){
 }
 
 main(){
-    while a > 1 do{
-        a = a - 1;
+    int i:0;
+    int a[10];
+    while i < 10 do{
+        a[i] = i;
+        i = i + 1;
+    }
+
+    while i >= 0 do{
+        printInt(a[i]);
+        i = i - 1;
     }
 }
