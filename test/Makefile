@@ -3,6 +3,9 @@ all: main
 OBJS = 	test.o\
 		io.o \
 
+io.o: io.c
+	gcc -c $< -o $@
+
 test.o: test.cmm
 	./clang-- -i $< -o $@
 
