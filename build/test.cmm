@@ -1,0 +1,18 @@
+extern int printInt(int x);
+extern int inputInt();
+
+int a;
+
+int fib(int x){
+    if x > 1 then{
+        return fib(x - 1) + fib(x - 2);
+    }
+
+    return 1;
+}
+
+main(){
+    while a > 1 do{
+        a = a - 1;
+    }
+}

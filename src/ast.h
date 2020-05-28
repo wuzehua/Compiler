@@ -108,11 +108,11 @@ public:
     std::string name;
     bool isArray = false;
 
-    shared_ptr<ExpressionNode> arraySize = nullptr;
+    shared_ptr<IntegerNode> arraySize = nullptr;
 
     explicit TypeNode(std::string name) : name(std::move(name)) {}
 
-    TypeNode(std::string name, ExpressionNode *&size) : name(std::move(name)), arraySize(size) {}
+    TypeNode(std::string name, IntegerNode *&size) : name(std::move(name)), arraySize(size) {}
 
     void debugPrint(std::string prefix) const override {
         std::cout << prefix << "TypeNode( name: " << name << ", isArray: " << isArray << ")\n";

@@ -36,7 +36,7 @@
 %token <token> EQUAL GE GT LE LT NEQUAL ASSIGN
 %token <token> LBRACE RBRACE LBRACKET RBRACKET LPAR RPAR COMMA SEMI DOT COLON
 %token <token> WHILE DO LOOP FOREVER 
-%token <token> PLUS MINUS MUL DIV NOT AND OR
+%token <token> PLUS MINUS MUL DIV NOT AND OR MOD
 %token <token> IF ELIF ELSE RETURN STATIC BREAK THEN EXTERN 
 
 
@@ -52,7 +52,7 @@
 %type <type> typeSpecifier
 
 %left PLUS MINUS
-%left MUL DIV
+%left MUL DIV MOD
 
 %start program
 
@@ -82,9 +82,12 @@ varDeclaration: typeSpecifier identifier SEMI {
             |   typeSpecifier identifier COLON simpleExpression SEMI{
                     $$ = new VariableDeclarationNode($1, $2, $4);
                 }
-            |   typeSpecifier identifier LBRACKET expression RBRACKET SEMI {
+            |   typeSpecifier identifier LBRACKET INTEGER RBRACKET SEMI {
                 $1->isArray = true;
-                $1->arraySize = shared_ptr<ExpressionNode>($4);
+                int64_t value;
+                sscanf($4->c_str(), "%ld", &value);
+                delete $4;
+                $1->arraySize = make_shared<IntegerNode>(value);
                 $$ = new VariableDeclarationNode($1, $2);
             }
             ;
@@ -196,7 +199,7 @@ mulExpression: mulExpression mulop unaryExpression { $$ = new BinaryOperatorNode
     | unaryExpression { $$ = $1; }
     ;
     
-mulop: MUL | DIV;
+mulop: MUL | DIV | MOD;
 
 unaryExpression: factor { $$ = $1; }
     ;
@@ -216,7 +219,9 @@ immutable: LPAR expression RPAR { $$ = $2; }
     ;
     
 call: identifier LPAR argList RPAR { $$ = new FunctionCallNode($1, $3); }
-    | identifier LPAR RPAR { $$ = new FunctionCallNode($1); }
+    | identifier LPAR RPAR {
+        ExpressionList* args = new ExpressionList();
+         $$ = new FunctionCallNode($1, args); }
     ;
 
 
@@ -231,6 +236,3 @@ constant: INTEGER { int64_t value; sscanf($1->c_str(), "%ld", &value); $$ = new 
     | TRUE { $$ = new BoolNode(true); }
     ;
 %%
-
-extern int dbg_on;
-extern void compile_and_run(BlockNode* b);

@@ -14,7 +14,7 @@ LIBS = `$(LLVMCONFIG) --libs --system-libs`
 BUILD_DIR = ../build
 
 clean:
-	$(RM) -rf test compiler *.output $(BUILD_DIR)/$(OBJS)
+	$(RM) -rf test compiler *.output $(BUILD_DIR)/*.o
 
 ast.cpp: ast.h
 

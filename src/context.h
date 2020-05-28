@@ -27,7 +27,7 @@ struct Symbol{
     ValuePtr variable = nullptr;
     bool isFunctionArgs = false;
     shared_ptr<TypeNode> type = nullptr;
-    vector<uint64_t> size;
+    uint64_t arraySize;
 
 };
 
@@ -191,16 +191,16 @@ public:
         }
     }
 
-    void setArraySize(const string& name, std::vector<uint64_t> value) {
+    void setArraySize(const string& name, const uint64_t& value) {
         Symbol* symbol = findSymbol(name);
         if(symbol != nullptr){
-            symbol->size = std::move(value);
+            symbol->arraySize = value;
         }
     }
 
-    std::vector<uint64_t> getArraySize(const string& name) {
+    uint64_t getArraySize(const string& name) {
         Symbol* symbol = findSymbol(name);
-        return symbol != nullptr ? symbol->size : std::vector<uint64_t>();
+        return symbol != nullptr ? symbol->arraySize : 0;
     }
 
     void PrintSymTable() const {

@@ -24,28 +24,43 @@ extern BlockNode* programBlock;
 
 using namespace std;
 
-int main(){
+int main(int argc, char** argv){
     extern FILE* yyin;
     extern int yyparse(void);
 
-    char filename[50];
+    yyin == nullptr;
+    char* filename;
+    string outputName = "a.o";
 
-    printf("Input file:");
-    scanf("%s", filename);
-    yyin = fopen(filename, "r");
-    yyparse();
-
-    
-    if(programBlock != nullptr) {
-//        programBlock->debugPrint("");
+    for(int i = 1;i < argc;i++){
+        if(strcmp(argv[i],"-i") == 0){
+            i++;
+            assert(i < argc);
+            filename = argv[i];
+            yyin = fopen(filename,"r");
+        }else if(strcmp(argv[i], "-o") == 0){
+            i++;
+            assert(i < argc);
+            outputName = string(argv[i]);
+        }else if (strcmp(argv[i], "-v") == 0){
+            std::cout<<"version 1.0.0-Beta\n";
+        }
+        
     }
 
-    CodeGenerationContext maincontext;
-    maincontext.generateCode(programBlock);
+    if(yyin != nullptr){
+        yyparse();
+        
+        CodeGenerationContext maincontext;
+        maincontext.generateCode(programBlock);
+        maincontext.exportToObj(outputName);
 
-    delete programBlock;
+        delete programBlock;
 
+        fclose(yyin);
+    }
+    
 
-    fclose(yyin);
+ 
     return 0;
 }

@@ -40,12 +40,8 @@ using legacy::PassManager;
 
 
 void CodeGenerationContext::generateCode(BlockNode* blockNode) {
-    std::cout<<"Start to generate LLVM IR\n";
 
-    vector<Type*> args;
-
-    FunctionType* mainType = FunctionType::get(Type::getInt64Ty(llvmContext), makeArrayRef(args), false);
-    Function* main = Function::Create(mainType, GlobalValue::ExternalLinkage, "main");
+    Log::raiseMessage("Start to generate LLVM IR\n", std::cout);
 
     BasicBlock* block = BasicBlock::Create(llvmContext, "entry");
 
@@ -53,11 +49,15 @@ void CodeGenerationContext::generateCode(BlockNode* blockNode) {
     auto value = blockNode->generateCode(*this);
     popCurrentCodeBlock();
 
-    std::cout<<"Finish generating LLVM IR\n";
+    std::error_code EC;
+    raw_fd_ostream dest("test.ll", EC, sys::fs::OF_None);
 
-//    PassManager pm;
-//    pm.add(createPrintModulePass(outs()));
-//    pm.run(*theModule);
+    PassManager pass;
+    pass.add(createPrintModulePass(dest));
+    pass.run(*theModule);
+
+    Log::raiseMessage("Finish generating LLVM IR\n", std::cout);
+
 }
 
 void CodeGenerationContext::exportToObj(const string &filename) {
@@ -68,15 +68,12 @@ void CodeGenerationContext::exportToObj(const string &filename) {
     InitializeAllAsmParsers();
     InitializeAllAsmPrinters();
 
-    Log::raiseMessage("Set Triple");
     auto TargetTriple = sys::getDefaultTargetTriple();
     theModule->setTargetTriple(TargetTriple);
-    Log::raiseMessage("Finish Triple");
 
     std::string Error;
     auto Target = TargetRegistry::lookupTarget(TargetTriple, Error);
 
-    Log::raiseMessage("Look up target");
     // Print an error and exit if we couldn't find the requested target.
     // This generally occurs if we've forgotten to initialise the
     // TargetRegistry or we have a bogus target triple.
@@ -92,15 +89,12 @@ void CodeGenerationContext::exportToObj(const string &filename) {
     auto RM = Optional<Reloc::Model>();
     auto TheTargetMachine =
             Target->createTargetMachine(TargetTriple, CPU, Features, opt, RM);
-    Log::raiseMessage("Target Machine");
 
     theModule->setDataLayout(TheTargetMachine->createDataLayout());
 
-    auto Filename = "output.o";
     std::error_code EC;
-    raw_fd_ostream dest(Filename, EC, sys::fs::OF_None);
+    raw_fd_ostream dest(filename, EC, sys::fs::OF_None);
 
-    Log::raiseMessage("OStream");
 
     if (EC) {
         errs() << "Could not open file: " << EC.message();
@@ -111,22 +105,19 @@ void CodeGenerationContext::exportToObj(const string &filename) {
     PassManager pass;
     auto FileType = CGFT_ObjectFile;
 
-    Log::raiseMessage("Pass");
 
     if (TheTargetMachine->addPassesToEmitFile(pass, dest, nullptr, FileType)) {
         errs() << "TheTargetMachine can't emit a file of this type";
         return;
     }
 
-    Log::raiseMessage("Emit");
 
 
     pass.run(*theModule); //TODO: Export obj failed
 
-    Log::raiseMessage("Run");
 
     dest.flush();
 
-    outs() << "Wrote " << Filename << "\n";
+    Log::raiseMessage("Export to " + filename, std::cout);
 
 }

@@ -57,6 +57,7 @@ id [a-zA-Z_][a-zA-Z0-9_]*
 "-"         return TOKEN(MINUS);
 "*"         return TOKEN(MUL);
 "/"         return TOKEN(DIV);
+"%"         return TOKEN(MOD);
 
 "("         return TOKEN(LPAR);
 ")"         return TOKEN(RPAR);
