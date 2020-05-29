@@ -33,3 +33,9 @@ test4: $(TEST4_OBJ)
 test6: $(TEST6_OBJ)
 	gcc $(TEST6_OBJ) -o $@.elf
 
+cfg:
+	llvm-as < test.ll | opt -analyze --dot-cfg -o main.dot
+
+cfg2png:
+	dot -Tpng .main.dot -o main.png
+
