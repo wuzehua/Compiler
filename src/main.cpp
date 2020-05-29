@@ -50,7 +50,7 @@ int main(int argc, char** argv){
 
     if(yyin != nullptr){
         yyparse();
-        
+
         CodeGenerationContext maincontext;
         maincontext.generateCode(programBlock);
         maincontext.exportToObj(outputName);

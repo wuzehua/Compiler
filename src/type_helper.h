@@ -36,7 +36,7 @@ public:
 
     TypePtr getLLVMVarType(const string& typeStr);
 
-    ValuePtr getDefaultValue(const string& typeStr);
+    ConstPtr getDefaultValue(const string& typeStr);
 
     ValuePtr cast(ValuePtr value, TypePtr type, BasicBlock *block);
 

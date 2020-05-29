@@ -14,7 +14,6 @@
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/IRPrintingPasses.h>
 #include <llvm/Support/raw_ostream.h>
-//#include <llvm/IR/Verifier.h>
 
 #include <llvm/Support/Host.h>
 #include <llvm/Support/raw_ostream.h>
@@ -41,11 +40,11 @@ using legacy::PassManager;
 
 void CodeGenerationContext::generateCode(BlockNode* blockNode) {
 
-    Log::raiseMessage("Start to generate LLVM IR\n", std::cout);
+    Log::raiseMessage("Start to generate LLVM IR", std::cout);
 
-    BasicBlock* block = BasicBlock::Create(llvmContext, "entry");
+    
 
-    pushCodeBlock(block);
+    pushCodeBlock(nullptr);
     auto value = blockNode->generateCode(*this);
     popCurrentCodeBlock();
 
@@ -56,12 +55,12 @@ void CodeGenerationContext::generateCode(BlockNode* blockNode) {
     pass.add(createPrintModulePass(dest));
     pass.run(*theModule);
 
-    Log::raiseMessage("Finish generating LLVM IR\n", std::cout);
+    Log::raiseMessage("Finish generating LLVM IR", std::cout);
 
 }
 
+//From llvm.org
 void CodeGenerationContext::exportToObj(const string &filename) {
-    // Initialize the target registry etc.
     InitializeAllTargetInfos();
     InitializeAllTargets();
     InitializeAllTargetMCs();
@@ -74,11 +73,9 @@ void CodeGenerationContext::exportToObj(const string &filename) {
     std::string Error;
     auto Target = TargetRegistry::lookupTarget(TargetTriple, Error);
 
-    // Print an error and exit if we couldn't find the requested target.
-    // This generally occurs if we've forgotten to initialise the
-    // TargetRegistry or we have a bogus target triple.
+
     if (!Target) {
-        errs() << Error;
+        Log::raiseError(Error);
         return;
     }
 
@@ -113,8 +110,7 @@ void CodeGenerationContext::exportToObj(const string &filename) {
 
 
 
-    pass.run(*theModule); //TODO: Export obj failed
-
+    pass.run(*theModule); 
 
     dest.flush();
 

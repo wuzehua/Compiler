@@ -25,10 +25,7 @@ using std::vector;
 
 struct Symbol{
     ValuePtr variable = nullptr;
-    // bool isFunctionArgs = false;
     shared_ptr<TypeNode> type = nullptr;
-    // uint64_t arraySize;
-
 };
 
 struct CodeBlock{
@@ -52,10 +49,8 @@ struct CodeBlock{
 
 
     void createSymbol(const string& name){
-        Log::raiseMessage("Creating Symbol " + name, std::cout);
         Symbol symbol;
         symbolTable.insert({name, symbol});
-        Log::raiseMessage("Finish creating symbol", std::cout);
     }
 
 };
@@ -125,11 +120,6 @@ public:
     }
 
 
-    // [[nodiscard]]
-    // bool isFuncArg(const string& name) const {
-    //     Symbol* symbol = findSymbol(name);
-    //     return symbol == nullptr ? false : symbol->isFunctionArgs;
-    // }
 
     void createSymbol(const string& name){
         assert(currentBlock != nullptr);
@@ -153,12 +143,6 @@ public:
         }
     }
 
-    // void setFuncArg(const string& name, bool value) {
-    //     Symbol* symbol = findSymbol(name);
-    //     if (symbol != nullptr){
-    //         symbol->isFunctionArgs = value;
-    //     }
-    // }
 
     bool isInGlobalBlock(){
         return globalBlock != nullptr && currentBlock == globalBlock;
@@ -197,17 +181,6 @@ public:
         }
     }
 
-    // void setArraySize(const string& name, const uint64_t& value) {
-    //     Symbol* symbol = findSymbol(name);
-    //     if(symbol != nullptr){
-    //         symbol->arraySize = value;
-    //     }
-    // }
-
-    // uint64_t getArraySize(const string& name) {
-    //     Symbol* symbol = findSymbol(name);
-    //     return symbol != nullptr ? symbol->arraySize : 0;
-    // }
 
     void PrintSymTable() const {
         std::cout << "[Symbol Table]\n\n";

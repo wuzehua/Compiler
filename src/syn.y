@@ -125,10 +125,6 @@ paramList: paramList COMMA paramType { $1->emplace_back(shared_ptr<VariableDecla
     ;
     
 paramType: typeSpecifier identifier { $$ = new VariableDeclarationNode($1, $2); }
-    |   typeSpecifier identifier LBRACKET RBRACKET {
-            $1->isArray = true;
-            $$ = new VariableDeclarationNode($1, $2);
-        }
     ;
 
 statement: expressionStmt 

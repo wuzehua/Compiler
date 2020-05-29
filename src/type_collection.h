@@ -19,11 +19,12 @@ using std::string;
 
 typedef llvm::Type* TypePtr;
 typedef llvm::Value* ValuePtr;
+typedef llvm::Constant* ConstPtr;
 
 struct TypeWrapper{
     TypePtr type;
-    ValuePtr defaultValue;
-    explicit TypeWrapper(TypePtr& type, ValuePtr defaultValue = nullptr):
+    ConstPtr defaultValue;
+    explicit TypeWrapper(TypePtr& type, ConstPtr defaultValue = nullptr):
             type(type),
             defaultValue(defaultValue){}
 
@@ -50,7 +51,7 @@ public:
 
     explicit TypeCollection(llvm::LLVMContext& context){
         TypePtr type = llvm::Type::getInt64Ty(context);
-        ValuePtr defaultValue = llvm::ConstantInt::get(type, 0, true);
+        ConstPtr defaultValue = llvm::ConstantInt::get(type, 0, true);
 
         typeMap.insert({"int", TypeWrapper(type, defaultValue)});
 
@@ -90,7 +91,7 @@ public:
     }
 
 
-    ValuePtr getTypeDefault(const string& type){
+    ConstPtr getTypeDefault(const string& type){
         auto it = typeMap.find(type);
         if(it == typeMap.end()){
             Log::raiseError("Type: " + type + " not defined", std::cout);

@@ -12,6 +12,7 @@ CPPFLAGS = `$(LLVMCONFIG) --cppflags` -std=c++17
 LDFLAGS = `$(LLVMCONFIG) --ldflags` -L/usr/lib
 LIBS = `$(LLVMCONFIG) --libs --system-libs`
 BUILD_DIR = ../build
+TEST_DIR = ../test
 
 clean:
 	$(RM) -rf test compiler *.output $(BUILD_DIR)/*.o
@@ -35,4 +36,7 @@ lex.cpp: lex.l syn.hpp
 
 compiler: $(OBJS)
 	g++ $(CPPFLAGS) -o $(BUILD_DIR)/$@ $(BUILD_DIR)/*.o $(LIBS) $(LDFLAGS)
+
+move: 
+	mv $(BUILD_DIR)/compiler $(TEST_DIR)/clang--
 

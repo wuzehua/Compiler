@@ -35,7 +35,7 @@ bool TypeHelper::isBool(ValuePtr v) {
     return v->getType() == typeCollection.getVarType("bool");
 }
 
-ValuePtr TypeHelper::getDefaultValue(const string &typeStr) {
+ConstPtr TypeHelper::getDefaultValue(const string &typeStr) {
     return typeCollection.getTypeDefault(typeStr);
 }
 

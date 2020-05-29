@@ -2,7 +2,7 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Value.h>
-#include "llvm/ADT/APFloat.h"
+#include <llvm/ADT/APFloat.h>
 
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Constants.h>
@@ -16,25 +16,21 @@
 
 
 ValuePtr IntegerNode::generateCode(CodeGenerationContext &context) const {
-    Log::raiseMessage("Generating Integer Const");
     Type *type = Type::getInt64Ty(context.llvmContext); //设置返回值的类型为int32
     return llvm::ConstantInt::get(type, value, true);
 }
 
 ValuePtr CharNode::generateCode(CodeGenerationContext &context) const {
-    Log::raiseMessage("Generating Char Const");
     Type *type = Type::getInt16Ty(context.llvmContext);
     return llvm::ConstantInt::get(type, value, true);
 }
 
 ValuePtr RealNode::generateCode(CodeGenerationContext &context) const {
-    Log::raiseMessage("Generating Real Const");
     Type *type = Type::getDoubleTy(context.llvmContext);
     return llvm::ConstantFP::get(type, value);
 }
 
 ValuePtr BoolNode::generateCode(CodeGenerationContext &context) const {
-    Log::raiseMessage("Generating Bool Const");
     Type *type = Type::getInt1Ty(context.llvmContext);
     return llvm::ConstantInt::get(type, value, true);
 }
@@ -194,13 +190,13 @@ ValuePtr FunctionCallNode::generateCode(CodeGenerationContext &context) const {
     }
 
 
-    return context.builder.CreateCall(calleeF, argsList, "calltmp");
+    return context.builder.CreateCall(calleeF, argsList);
 }
 
 ValuePtr AssignmentNode::generateCode(CodeGenerationContext &context) const {
     auto var = context.getSymbolValue(id->name);
     if (!var) {
-        Log::raiseError("Undefined variable", std::cout);
+        Log::raiseError("AssignmentNode: Undefined variable " + id->name, std::cout);
         return nullptr;
     }
 
@@ -216,7 +212,7 @@ ValuePtr ArrayIndexNode::generateCode(CodeGenerationContext &context) const {
     auto type = context.getSymbolType(id->name);
 
     if (!var) {
-        Log::raiseError("Undefined variable", std::cout);
+        Log::raiseError("ArrayIndex: Undefined variable " + id->name, std::cout);
         return nullptr;
     }
 
@@ -227,12 +223,8 @@ ValuePtr ArrayIndexNode::generateCode(CodeGenerationContext &context) const {
 
     auto value = index->generateCode(context);
     ArrayRef<ValuePtr> indices;
-    if (var->getType()->isPointerTy()) {
-        indices = {ConstantInt::get(Type::getInt64Ty(context.llvmContext), 0), value};
-    } else {
-        Log::raiseError(id->name + " is not an array", std::cout);
-        return nullptr;
-    }
+    indices = {ConstantInt::get(Type::getInt64Ty(context.llvmContext), 0), value};
+
 
     return context.builder.CreateAlignedLoad(context.builder.CreateInBoundsGEP(var, indices, "elementPtr"),
                                              MaybeAlign());
@@ -243,7 +235,7 @@ ValuePtr ArrayIndexAssignmentNode::generateCode(CodeGenerationContext &context) 
     auto type = context.getSymbolType(element->id->name);
 
     if (!var) {
-        Log::raiseError("Undefined variable", std::cout);
+        Log::raiseError("ArrayIndexAssignment: Undefined variable " + element->id->name, std::cout);
         return nullptr;
     }
 
@@ -272,8 +264,6 @@ ValuePtr BlockNode::generateCode(CodeGenerationContext &context) const {
 
 ValuePtr VariableDeclarationNode::generateCode(CodeGenerationContext &context) const {
 
-    Log::raiseMessage("Start generating variable declaration node for " + id->name, std::cout);
-
     TypePtr typePtr = context.typeHelper.getLLVMVarType(type->name);
 
     if (typePtr == nullptr) {
@@ -281,36 +271,36 @@ ValuePtr VariableDeclarationNode::generateCode(CodeGenerationContext &context) c
         return nullptr;
     }
 
-    Log::raiseMessage("Type is " + TypeHelper::llvmTypeToStr(typePtr), std::cout);
 
     context.createSymbol(id->name);
 
     ValuePtr cd;
+
+
+
     if (type->isArray) {
         uint64_t arraySize = type->arraySize->value;
 
         TypePtr lengthType = Type::getInt64Ty(context.llvmContext);
         ValuePtr arraySizePtr = ConstantInt::get(lengthType, arraySize);
 
-        auto arrayType = ArrayType::get(context.typeHelper.getLLVMVarType(type->name), arraySize);
-        cd = context.builder.CreateAlloca(arrayType, arraySizePtr, "arraytmp");
+        typePtr = ArrayType::get(typePtr, arraySize);
 
-        // context.setArraySize(id->name, arraySize);
-
-    } else {
-
-        if (context.isInGlobalBlock()) {
-            auto globalVar = new GlobalVariable(typePtr, false, GlobalValue::InternalLinkage);
-            context.theModule->getGlobalList().push_back(globalVar);
-            cd = globalVar;
-        } else {
-            Log::raiseMessage("Creating Alloca for " + id->name, std::cout);
-            cd = context.builder.CreateAlloca(typePtr, nullptr, id->name);
-            Log::raiseMessage("Finish creating Alloca for " + id->name, std::cout);
-        }
     }
 
-    Log::raiseMessage("Finish creating IR for variable " + id->name, std::cout);
+    if(context.isInGlobalBlock()){
+        Constant* initial = nullptr;
+        if(type->isArray == false){
+            initial = context.typeHelper.getDefaultValue(type->name);
+        }else{
+            initial = ConstantAggregateZero::get(typePtr);
+        }
+        auto globalVar = new GlobalVariable(*context.theModule,typePtr, false, GlobalValue::CommonLinkage,initial, id->name);    
+        cd = globalVar;
+    }else{
+        cd = context.builder.CreateAlloca(typePtr, nullptr, id->name);
+    }
+
 
     
     context.setSymbolType(id->name, type);
@@ -346,6 +336,7 @@ ValuePtr FunctionDeclarationNode::generateCode(CodeGenerationContext &context) c
         return thisFunc;
     }
 
+    thisFunc->setDSOLocal(true);
     BasicBlock *funcBlock = BasicBlock::Create(context.llvmContext, "entry", thisFunc);
     context.builder.SetInsertPoint(funcBlock);
     context.pushCodeBlock(funcBlock);
@@ -353,21 +344,12 @@ ValuePtr FunctionDeclarationNode::generateCode(CodeGenerationContext &context) c
 
     auto args_it = this->args->begin();
     auto llvmargs_it = thisFunc->args().begin();
-    auto arg_type = argsTypeVec.begin();
-    for (; args_it != this->args->end() && llvmargs_it != thisFunc->args().end() && arg_type != argsTypeVec.end(); ++args_it, ++llvmargs_it, ++arg_type) {
-        string name = (*args_it)->id->name;
-        llvmargs_it->setName(name);
-        ValuePtr val;
-        if ((*args_it)->type->isArray){
-            val = context.builder.CreateAlloca(PointerType::get(*arg_type, 0), 0U);
-        }
-        else{
-            val = (*args_it)->generateCode(context);
-        }
+    for (; args_it != this->args->end() && llvmargs_it != thisFunc->args().end(); ++args_it, ++llvmargs_it) {
+        
+        ValuePtr val = (*args_it)->generateCode(context);
         context.builder.CreateStore(llvmargs_it, val);
     }
 
-    // context.PrintSymTable();
 
     block->generateCode(context);
     
@@ -417,7 +399,6 @@ ValuePtr IfStatementNode::generateCode(CodeGenerationContext &context) const {
     if(thenB->getTerminator() == nullptr){
         context.builder.CreateBr(condB);
     }
-    thenB = context.builder.GetInsertBlock();
 
 
     if (falseBlock) {

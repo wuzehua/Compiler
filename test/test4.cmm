@@ -1,0 +1,26 @@
+extern int printInt(int x);
+extern int inputInt();
+
+int k;
+int f;
+
+int go(int b, int a){
+    int fk;
+    int res;
+    if a > 0 then{
+        res = a * go(b, a - 1);
+    }else{
+        res = 1;
+    }
+
+    b = b + res;
+    k = k + res;
+    return res;
+}
+
+main(){
+    k = 0;
+    f = go(k, 5);
+    printInt(f);
+    printInt(k);
+}
