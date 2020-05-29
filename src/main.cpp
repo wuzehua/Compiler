@@ -28,7 +28,7 @@ int main(int argc, char** argv){
     extern FILE* yyin;
     extern int yyparse(void);
 
-    yyin == nullptr;
+    yyin = nullptr;
     char* filename;
     string outputName = "a.o";
 
@@ -45,7 +45,7 @@ int main(int argc, char** argv){
         }else if (strcmp(argv[i], "-v") == 0){
             std::cout<<"version 1.0.0-Beta\n";
         }
-        
+
     }
 
     if(yyin != nullptr){
@@ -59,8 +59,8 @@ int main(int argc, char** argv){
 
         fclose(yyin);
     }
-    
 
- 
+
+
     return 0;
 }

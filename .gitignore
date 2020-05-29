@@ -34,6 +34,7 @@
 **/clang--
 **/compiler
 **/main
+**/*.elf
 
 # Graph
 *.dot

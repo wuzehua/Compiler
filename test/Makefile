@@ -25,11 +25,11 @@ clean:
 	$(RM) *.o main test2 test4 test6 *.ll
 
 test2: $(TEST2_OBJ)
-	gcc $(TEST2_OBJ) -o $@
+	gcc $(TEST2_OBJ) -o $@.elf
 
 test4: $(TEST4_OBJ)
-	gcc $(TEST4_OBJ) -o $@
+	gcc $(TEST4_OBJ) -o $@.elf
 
 test6: $(TEST6_OBJ)
-	gcc $(TEST6_OBJ) -o $@
+	gcc $(TEST6_OBJ) -o $@.elf
 
