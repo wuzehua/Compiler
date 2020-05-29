@@ -5,6 +5,7 @@
 *.slo
 *.lo
 *.o
+*.ll
 *.obj
 
 # Precompiled Headers
@@ -30,6 +31,13 @@
 *.exe
 *.out
 *.app
+**/clang--
+**/compiler
+**/main
+
+# Graph
+*.dot
+*.png
 
 #macOS
 .DS_Store
