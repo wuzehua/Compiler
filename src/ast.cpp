@@ -42,14 +42,12 @@ ValuePtr IdentifierNode::generateCode(CodeGenerationContext &context) const {
         return nullptr;
     }
 
-    if (value->getType()->isPointerTy()) {
-        auto valuePtr = context.builder.CreateLoad(value, "valuePtr");
-        if (valuePtr->getType()->isArrayTy()) {
-            std::vector<ValuePtr> index;
-            index.emplace_back(ConstantInt::get(Type::getInt32PtrTy(context.llvmContext), 0, false));
-            return context.builder.CreateInBoundsGEP(value, index, "valuePtr");
-        }
+    if(value->getType()->isPointerTy()){
+        Log::raiseWarning("Access array pointer is not supported yet.", std::cout);
+        return nullptr;
     }
+
+
     return context.builder.CreateLoad(value, false, "");
 }
 
@@ -167,7 +165,7 @@ ValuePtr BinaryOperatorNode::generateCode(CodeGenerationContext &context) const 
 ValuePtr FunctionCallNode::generateCode(CodeGenerationContext &context) const {
     Function *calleeF = context.theModule->getFunction(id->name);
     if (!calleeF) {
-        Log::raiseError("Function not found", std::cout);
+        Log::raiseError("Function " + id->name + " is not found", std::cout);
         return nullptr;
     }
 
@@ -271,12 +269,9 @@ ValuePtr VariableDeclarationNode::generateCode(CodeGenerationContext &context) c
         return nullptr;
     }
 
-
     context.createSymbol(id->name);
 
     ValuePtr cd;
-
-
 
     if (type->isArray) {
         uint64_t arraySize = type->arraySize->value;
@@ -302,7 +297,6 @@ ValuePtr VariableDeclarationNode::generateCode(CodeGenerationContext &context) c
     }
 
 
-    
     context.setSymbolType(id->name, type);
     context.setSymbolValue(id->name, cd);
 
@@ -336,7 +330,6 @@ ValuePtr FunctionDeclarationNode::generateCode(CodeGenerationContext &context) c
         return thisFunc;
     }
 
-    thisFunc->setDSOLocal(true);
     BasicBlock *funcBlock = BasicBlock::Create(context.llvmContext, "entry", thisFunc);
     context.builder.SetInsertPoint(funcBlock);
     context.pushCodeBlock(funcBlock);
@@ -345,7 +338,6 @@ ValuePtr FunctionDeclarationNode::generateCode(CodeGenerationContext &context) c
     auto args_it = this->args->begin();
     auto llvmargs_it = thisFunc->args().begin();
     for (; args_it != this->args->end() && llvmargs_it != thisFunc->args().end(); ++args_it, ++llvmargs_it) {
-        
         ValuePtr val = (*args_it)->generateCode(context);
         context.builder.CreateStore(llvmargs_it, val);
     }
