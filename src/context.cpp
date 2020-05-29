@@ -35,14 +35,11 @@ using llvm::Type;
 using std::vector;
 using llvm::LLVMContext;
 
-using legacy::PassManager;
 
-
-void CodeGenerationContext::generateCode(BlockNode* blockNode) {
+void CodeGenerationContext::generateCode(BlockNode *blockNode) {
 
     Log::raiseMessage("Start to generate LLVM IR", std::cout);
 
-    
 
     pushCodeBlock(nullptr);
     auto value = blockNode->generateCode(*this);
@@ -51,7 +48,7 @@ void CodeGenerationContext::generateCode(BlockNode* blockNode) {
     std::error_code EC;
     raw_fd_ostream dest("test.ll", EC, sys::fs::OF_None);
 
-    PassManager pass;
+    legacy::PassManager pass;
     pass.add(createPrintModulePass(dest));
     pass.run(*theModule);
 
@@ -84,8 +81,7 @@ void CodeGenerationContext::exportToObj(const string &filename) {
 
     TargetOptions opt;
     auto RM = Optional<Reloc::Model>();
-    auto TheTargetMachine =
-            Target->createTargetMachine(TargetTriple, CPU, Features, opt, RM);
+    auto TheTargetMachine = Target->createTargetMachine(TargetTriple, CPU, Features, opt, RM);
 
     theModule->setDataLayout(TheTargetMachine->createDataLayout());
 
@@ -99,7 +95,7 @@ void CodeGenerationContext::exportToObj(const string &filename) {
     }
 
 
-    PassManager pass;
+    legacy::PassManager pass;
     auto FileType = CGFT_ObjectFile;
 
 
@@ -109,11 +105,22 @@ void CodeGenerationContext::exportToObj(const string &filename) {
     }
 
 
-
-    pass.run(*theModule); 
+    pass.run(*theModule);
 
     dest.flush();
 
     Log::raiseMessage("Export to " + filename, std::cout);
 
+}
+
+void CodeGenerationContext::drawAST(BlockNode *blockNode, const string &filename) {
+    fillInParent(blockNode);
+    WriteGraph<BlockNode *>(blockNode, Twine("AST"), false, Twine(""), filename);
+}
+
+void CodeGenerationContext::fillInParent(ASTNode *node) {
+    for (auto child : node->getChildren()) {
+        child->parent = node;
+        fillInParent(child);
+    }
 }

@@ -5,6 +5,12 @@
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
 
+#include <llvm/ADT/GraphTraits.h>
+#include <llvm/Support/GraphWriter.h>
+#include <llvm/Analysis/CFGPrinter.h>
+#include <llvm/Support/DOTGraphTraits.h>
+#include <llvm/ADT/iterator.h>
+
 #include <memory>
 #include <utility>
 #include <vector>
@@ -15,6 +21,7 @@
 #include "ast.h"
 #include "syn.hpp"
 #include "type_helper.h"
+#include "GraphTraitsBlockNode.h"
 
 using namespace llvm;
 using std::unique_ptr;
@@ -23,32 +30,30 @@ using std::map;
 using std::vector;
 
 
-struct Symbol{
+struct Symbol {
     ValuePtr variable = nullptr;
     shared_ptr<TypeNode> type = nullptr;
 };
 
-struct CodeBlock{
-    BasicBlock* block;
+struct CodeBlock {
+    BasicBlock *block;
     map<string, struct Symbol> symbolTable;
-    struct CodeBlock* next;
+    struct CodeBlock *next;
 
-    explicit CodeBlock(BasicBlock* block):
-                block(block),
-                next(nullptr){}
+    explicit CodeBlock(BasicBlock *block) : block(block), next(nullptr) {}
 
     [[nodiscard]]
-    Symbol* findSymbol(const string& name) const {
+    Symbol *findSymbol(const string &name) const {
         auto iter = symbolTable.find(name);
-        if(iter != symbolTable.end()){
-            return (Symbol*)&(iter->second);
+        if (iter != symbolTable.end()) {
+            return (Symbol *) &(iter->second);
         }
 
         return nullptr;
     }
 
 
-    void createSymbol(const string& name){
+    void createSymbol(const string &name) {
         Symbol symbol;
         symbolTable.insert({name, symbol});
     }
@@ -57,17 +62,17 @@ struct CodeBlock{
 
 class CodeGenerationContext {
 private:
-    CodeBlock* globalBlock;
-    CodeBlock* currentBlock;
+    CodeBlock *globalBlock;
+    CodeBlock *currentBlock;
 
 
     [[nodiscard]]
-    Symbol* findSymbol(const string& name) const {
+    Symbol *findSymbol(const string &name) const {
         auto tempBlock = currentBlock;
-        Symbol* symbol = nullptr;
-        while (tempBlock != nullptr){
+        Symbol *symbol = nullptr;
+        while (tempBlock != nullptr) {
             symbol = tempBlock->findSymbol(name);
-            if(symbol != nullptr){
+            if (symbol != nullptr) {
                 break;
             }
             tempBlock = tempBlock->next;
@@ -76,14 +81,13 @@ private:
     }
 
     [[nodiscard]]
-    Symbol* findSymbolInCurrentBlock(const string& name) const {
-        Symbol* symbol = nullptr;
-        if(currentBlock != nullptr){
+    Symbol *findSymbolInCurrentBlock(const string &name) const {
+        Symbol *symbol = nullptr;
+        if (currentBlock != nullptr) {
             symbol = currentBlock->findSymbol(name);
         }
         return symbol;
     }
-
 
 
 public:
@@ -99,8 +103,8 @@ public:
         currentBlock = nullptr;
     }
 
-    ~CodeGenerationContext(){
-        while(currentBlock != nullptr){
+    ~CodeGenerationContext() {
+        while (currentBlock != nullptr) {
             auto temp = currentBlock;
             currentBlock = currentBlock->next;
             delete temp;
@@ -108,74 +112,73 @@ public:
     }
 
     [[nodiscard]]
-    ValuePtr getSymbolValue(const string& name) const {
-        Symbol* symbol = findSymbol(name);
+    ValuePtr getSymbolValue(const string &name) const {
+        Symbol *symbol = findSymbol(name);
         return symbol == nullptr ? nullptr : symbol->variable;
     }
 
     [[nodiscard]]
-    shared_ptr<TypeNode> getSymbolType(const string& name) const {
-        Symbol* symbol = findSymbol(name);
+    shared_ptr<TypeNode> getSymbolType(const string &name) const {
+        Symbol *symbol = findSymbol(name);
         return symbol == nullptr ? nullptr : symbol->type;
     }
 
 
-
-    void createSymbol(const string& name){
+    void createSymbol(const string &name) {
         assert(currentBlock != nullptr);
-        Symbol* symbol = findSymbolInCurrentBlock(name);
-        if(symbol == nullptr){
+        Symbol *symbol = findSymbolInCurrentBlock(name);
+        if (symbol == nullptr) {
             currentBlock->createSymbol(name);
         }
     }
 
-    void setSymbolValue(const string& name, ValuePtr value) {
-        Symbol* symbol = findSymbol(name);
-        if (symbol != nullptr){
+    void setSymbolValue(const string &name, ValuePtr value) {
+        Symbol *symbol = findSymbol(name);
+        if (symbol != nullptr) {
             symbol->variable = value;
         }
     }
 
-    void setSymbolType(const string& name, const shared_ptr<TypeNode>& value) {
-        Symbol* symbol = findSymbol(name);
-        if (symbol != nullptr){
+    void setSymbolType(const string &name, const shared_ptr<TypeNode> &value) {
+        Symbol *symbol = findSymbol(name);
+        if (symbol != nullptr) {
             symbol->type = value;
         }
     }
 
 
-    bool isInGlobalBlock(){
+    bool isInGlobalBlock() {
         return globalBlock != nullptr && currentBlock == globalBlock;
     }
 
 
     [[nodiscard]]
-    BasicBlock* getCurrentBasicBlock() const {
+    BasicBlock *getCurrentBasicBlock() const {
         return currentBlock != nullptr ? currentBlock->block : nullptr;
     }
 
-    void setCurrentBlock(BasicBlock* block){
-        if(currentBlock != nullptr){
+    void setCurrentBlock(BasicBlock *block) {
+        if (currentBlock != nullptr) {
             currentBlock->block = block;
         }
     }
 
-    void pushCodeBlock(BasicBlock* block){
+    void pushCodeBlock(BasicBlock *block) {
         auto codeBlock = new CodeBlock(block);
-        if(globalBlock == nullptr){
+        if (globalBlock == nullptr) {
             globalBlock = codeBlock;
-        }else{
+        } else {
             codeBlock->next = currentBlock;
         }
         currentBlock = codeBlock;
     }
 
-    void popCurrentCodeBlock(){
-        if(currentBlock != nullptr){
+    void popCurrentCodeBlock() {
+        if (currentBlock != nullptr) {
             auto temp = currentBlock;
             currentBlock = currentBlock->next;
             delete temp;
-            if(currentBlock == nullptr){
+            if (currentBlock == nullptr) {
                 globalBlock = nullptr;
             }
         }
@@ -186,29 +189,33 @@ public:
         std::cout << "[Symbol Table]\n\n";
         auto temp = currentBlock;
         int index = 0;
-        while (temp != nullptr){
-            if(temp == globalBlock){
-                std::cout<<"[Global Block]\n";
-            }else {
+        while (temp != nullptr) {
+            if (temp == globalBlock) {
+                std::cout << "[Global Block]\n";
+            } else {
                 std::cout << "[Block " << index << "]\n";
             }
-            for(auto & it : temp->symbolTable){
-                const Symbol& symbol = it.second;
-                std::cout<<it.first<<": Var("<<symbol.variable<<") ";
-                if(symbol.type){
-                    std::cout<<"Type(name:"<<symbol.type->name<<", isArray:"<<symbol.type->isArray<<")\n";
+            for (auto &it : temp->symbolTable) {
+                const Symbol &symbol = it.second;
+                std::cout << it.first << ": Var(" << symbol.variable << ") ";
+                if (symbol.type) {
+                    std::cout << "Type(name:" << symbol.type->name << ", isArray:" << symbol.type->isArray << ")\n";
                 }
             }
 
-            std::cout<<'\n';
+            std::cout << '\n';
             index += 1;
             temp = temp->next;
         }
     }
 
-    void generateCode(BlockNode* blockNode);
+    void fillInParent(ASTNode *node);
 
-    void exportToObj(const string& filename);
+    void drawAST(BlockNode *blockNode, const string &filename);
+
+    void generateCode(BlockNode *blockNode);
+
+    void exportToObj(const string &filename);
 
 
 };

@@ -6,7 +6,6 @@
 #include<memory>
 #include <llvm/IR/Value.h>
 
-#include <string>
 #include <functional>
 
 //#include "context.h"
@@ -32,6 +31,28 @@ using std::make_shared;
 
 class ASTNode {
 public:
+    ASTNode *parent = nullptr;
+
+    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const {
+        return std::vector<ASTNode *>(0);
+    }
+
+    [[nodiscard]] virtual ASTNode *getChildren(int index) const {
+        return getChildren()[index];
+    }
+
+    [[nodiscard]] virtual int getChildrenNumber() const {
+        return getChildren().size();
+    }
+
+    [[nodiscard]] virtual std::string getLabel() const {
+        return "";
+    }
+
+    [[nodiscard]] virtual std::string getDescription() const {
+        return "";
+    }
+
     virtual ~ASTNode() = default;
 
     virtual ValuePtr generateCode(CodeGenerationContext &context) const {
@@ -44,15 +65,39 @@ public:
 
 class ExpressionNode : public ASTNode {
 public:
+
+    [[nodiscard]] std::string getLabel() const {
+        return "ExpressionNode";
+    }
+
+    [[nodiscard]] std::string getDescription() const {
+        return "";
+    }
 };
 
 class StatementNode : public ASTNode {
 public:
+
+    [[nodiscard]] std::string getLabel() const {
+        return "StatementNode";
+    }
+
+    [[nodiscard]] std::string getDescription() const {
+        return "";
+    }
 };
 
 class IntegerNode : public ExpressionNode {
 public:
     int64_t value;
+
+    [[nodiscard]] std::string getLabel() const {
+        return "IntegerNode";
+    }
+
+    [[nodiscard]] std::string getDescription() const {
+        return "value: " + std::to_string(value);
+    }
 
     explicit IntegerNode(const int64_t &value) : value(value) {}
 
@@ -67,6 +112,14 @@ class CharNode : public ExpressionNode {
 public:
     char value;
 
+    [[nodiscard]] std::string getLabel() const {
+        return "CharNode";
+    }
+
+    [[nodiscard]] std::string getDescription() const {
+        return "value: " + std::to_string(value);
+    }
+
     explicit CharNode(const char &value) : value(value) {}
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
@@ -80,6 +133,14 @@ class RealNode : public ExpressionNode {
 public:
     double value;
 
+    [[nodiscard]] std::string getLabel() const {
+        return "RealNode";
+    }
+
+    [[nodiscard]] std::string getDescription() const {
+        return "value: " + std::to_string(value);
+    }
+
     explicit RealNode(const double &value) : value(value) {}
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
@@ -92,6 +153,14 @@ public:
 class BoolNode : public ExpressionNode {
 public:
     bool value;
+
+    [[nodiscard]] std::string getLabel() const {
+        return "BoolNode";
+    }
+
+    [[nodiscard]] std::string getDescription() const {
+        return "value: " + std::to_string(value);
+    }
 
     explicit BoolNode(const bool &value) : value(value) {}
 
@@ -110,6 +179,14 @@ public:
 
     shared_ptr<IntegerNode> arraySize = nullptr;
 
+    [[nodiscard]] std::string getLabel() const {
+        return "TypeNode";
+    }
+
+    [[nodiscard]] std::string getDescription() const {
+        return "name: " + name + "\tisArray: " + std::to_string(isArray);
+    }
+
     explicit TypeNode(std::string name) : name(std::move(name)) {}
 
     TypeNode(std::string name, IntegerNode *&size) : name(std::move(name)), arraySize(size) {}
@@ -123,6 +200,14 @@ public:
 class IdentifierNode : public ExpressionNode {
 public:
     std::string name;
+
+    [[nodiscard]] std::string getLabel() const {
+        return "IdentifierNode";
+    }
+
+    [[nodiscard]] std::string getDescription() const {
+        return "name: " + name;
+    }
 
     explicit IdentifierNode(std::string name) : name(std::move(name)) {}
 
@@ -139,6 +224,14 @@ public:
     shared_ptr<ExpressionNode> leftExpr;
     shared_ptr<ExpressionNode> rightExpr;
     int op;
+
+    [[nodiscard]] std::string getLabel() const {
+        return "BinaryOperatorNode";
+    }
+
+    [[nodiscard]] std::string getDescription() const {
+        return "op: " + std::to_string(op);
+    }
 
     BinaryOperatorNode(ExpressionNode *left, int &op, ExpressionNode *right) : op(op) {
         leftExpr = shared_ptr<ExpressionNode>(left);
@@ -161,6 +254,14 @@ class FunctionCallNode : public ExpressionNode {
 public:
     const shared_ptr<IdentifierNode> id;
     shared_ptr<ExpressionList> args;
+
+    [[nodiscard]] std::string getLabel() const {
+        return "FunctionCallNode";
+    }
+
+    [[nodiscard]] std::string getDescription() const {
+        return "";
+    }
 
     explicit FunctionCallNode(IdentifierNode *id) : id(shared_ptr<IdentifierNode>(id)), args(nullptr) {}
 
@@ -186,6 +287,14 @@ class AssignmentNode : public ExpressionNode {
 public:
     shared_ptr<IdentifierNode> id;
     shared_ptr<ExpressionNode> expr;
+
+    [[nodiscard]] std::string getLabel() const {
+        return "AssignmentNode";
+    }
+
+    [[nodiscard]] std::string getDescription() const {
+        return "";
+    }
 
     AssignmentNode(IdentifierNode *id, ExpressionNode *expr) {
         this->id = shared_ptr<IdentifierNode>(id);
@@ -213,6 +322,14 @@ public:
     shared_ptr<IdentifierNode> id;
     shared_ptr<ExpressionNode> index;
 
+    [[nodiscard]] std::string getLabel() const {
+        return "ArrayIndexNode";
+    }
+
+    [[nodiscard]] std::string getDescription() const {
+        return "";
+    }
+
     ArrayIndexNode(IdentifierNode *id, ExpressionNode *index) {
         this->id = shared_ptr<IdentifierNode>(id);
         this->index = shared_ptr<ExpressionNode>(index);
@@ -235,6 +352,14 @@ public:
     shared_ptr<ArrayIndexNode> element;
     shared_ptr<ExpressionNode> expr;
 
+    [[nodiscard]] std::string getLabel() const {
+        return "ArrayIndexAssignmentNode";
+    }
+
+    [[nodiscard]] std::string getDescription() const {
+        return "";
+    }
+
     ArrayIndexAssignmentNode(ArrayIndexNode *element, ExpressionNode *expr) : element(
             shared_ptr<ArrayIndexNode>(element)), expr(shared_ptr<ExpressionNode>(expr)) {}
 
@@ -254,6 +379,14 @@ class BlockNode : public StatementNode {
 public:
     StatementList statements;
 
+    [[nodiscard]] std::string getLabel() const {
+        return "BlockNode";
+    }
+
+    [[nodiscard]] std::string getDescription() const {
+        return "";
+    }
+
     BlockNode() = default;
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
@@ -272,6 +405,14 @@ public:
     shared_ptr<TypeNode> type;
     shared_ptr<IdentifierNode> id;
     shared_ptr<ExpressionNode> assignmentExpr; //Nullable
+
+    [[nodiscard]] std::string getLabel() const {
+        return "VariableDeclarationNode";
+    }
+
+    [[nodiscard]] std::string getDescription() const {
+        return "";
+    }
 
     VariableDeclarationNode(TypeNode *type, IdentifierNode *id) : type(shared_ptr<TypeNode>(type)),
                                                                   id(shared_ptr<IdentifierNode>(id)),
@@ -301,6 +442,14 @@ class ExpressionStatementNode : public StatementNode {
 public:
     shared_ptr<ExpressionNode> expr;
 
+    [[nodiscard]] std::string getLabel() const {
+        return "ExpressionStatementNode";
+    }
+
+    [[nodiscard]] std::string getDescription() const {
+        return "";
+    }
+
     explicit ExpressionStatementNode(ExpressionNode *expr) {
         this->expr = shared_ptr<ExpressionNode>(expr);
     }
@@ -323,11 +472,19 @@ public:
     shared_ptr<BlockNode> block;
     bool external;
 
-    FunctionDeclarationNode(TypeNode *type, IdentifierNode *id, VariableList *args, BlockNode *block, bool external = false) : type(
-            shared_ptr<TypeNode>(type)), id(shared_ptr<IdentifierNode>(id)), args(shared_ptr<VariableList>(args)),
-                                                                                                        block(shared_ptr<BlockNode>(
-                                                                                                                block)) ,
-                                                                                                                external(external){}
+    [[nodiscard]] std::string getLabel() const {
+        return "FunctionDeclarationNode";
+    }
+
+    [[nodiscard]] std::string getDescription() const {
+        return "";
+    }
+
+    FunctionDeclarationNode(TypeNode *type, IdentifierNode *id, VariableList *args, BlockNode *block,
+                            bool external = false) : type(shared_ptr<TypeNode>(type)),
+                                                     id(shared_ptr<IdentifierNode>(id)),
+                                                     args(shared_ptr<VariableList>(args)),
+                                                     block(shared_ptr<BlockNode>(block)), external(external) {}
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
@@ -364,6 +521,14 @@ public:
     shared_ptr<BlockNode> trueBlock;
     shared_ptr<BlockNode> falseBlock;
 
+    [[nodiscard]] std::string getLabel() const {
+        return "IfStatementNode";
+    }
+
+    [[nodiscard]] std::string getDescription() const {
+        return "";
+    }
+
     IfStatementNode(ExpressionNode *condition, BlockNode *trueBlock, BlockNode *falseBlock) : condition(
             shared_ptr<ExpressionNode>(condition)), trueBlock(shared_ptr<BlockNode>(trueBlock)), falseBlock(
             shared_ptr<BlockNode>(falseBlock)) {}
@@ -390,6 +555,14 @@ public:
     shared_ptr<ExpressionNode> condition;
     shared_ptr<BlockNode> block;
 
+    [[nodiscard]] std::string getLabel() const {
+        return "WhileStatementNode";
+    }
+
+    [[nodiscard]] std::string getDescription() const {
+        return "";
+    }
+
     WhileStatementNode(ExpressionNode *condition, BlockNode *block) : condition(shared_ptr<ExpressionNode>(condition)),
                                                                       block(shared_ptr<BlockNode>(block)) {}
 
@@ -408,6 +581,14 @@ public:
 class ReturnStatementNode : public StatementNode {
 public:
     shared_ptr<ExpressionNode> expr;
+
+    [[nodiscard]] std::string getLabel() const {
+        return "ReturnStatementNode";
+    }
+
+    [[nodiscard]] std::string getDescription() const {
+        return "";
+    }
 
     explicit ReturnStatementNode(ExpressionNode *expr) : expr(shared_ptr<ExpressionNode>(expr)) {}
 

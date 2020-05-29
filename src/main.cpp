@@ -20,38 +20,44 @@
 using std::shared_ptr;
 using std::make_shared;
 
-extern BlockNode* programBlock;
+extern BlockNode *programBlock;
 
 using namespace std;
 
-int main(int argc, char** argv){
-    extern FILE* yyin;
+int main(int argc, char **argv) {
+    extern FILE *yyin;
     extern int yyparse(void);
 
     yyin = nullptr;
-    char* filename;
+    char *filename;
     string outputName = "a.o";
+    string astName = "ast.png";
 
-    for(int i = 1;i < argc;i++){
-        if(strcmp(argv[i],"-i") == 0){
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-i") == 0) {
             i++;
             assert(i < argc);
             filename = argv[i];
-            yyin = fopen(filename,"r");
-        }else if(strcmp(argv[i], "-o") == 0){
+            yyin = fopen(filename, "r");
+        } else if (strcmp(argv[i], "-o") == 0) {
             i++;
             assert(i < argc);
             outputName = string(argv[i]);
-        }else if (strcmp(argv[i], "-v") == 0){
-            std::cout<<"version 1.0.0-Beta\n";
+        } else if (strcmp(argv[i], "-d") == 0) {
+            i++;
+            assert(i < argc);
+            astName = string(argv[i]);
+        } else if (strcmp(argv[i], "-v") == 0) {
+            std::cout << "version 1.0.0-Beta\n";
         }
 
     }
 
-    if(yyin != nullptr){
+    if (yyin != nullptr) {
         yyparse();
 
         CodeGenerationContext maincontext;
+        maincontext.drawAST(programBlock, astName);
         maincontext.generateCode(programBlock);
         maincontext.exportToObj(outputName);
 
@@ -59,7 +65,6 @@ int main(int argc, char** argv){
 
         fclose(yyin);
     }
-
 
 
     return 0;
