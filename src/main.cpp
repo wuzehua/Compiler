@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
         yyparse();
 
         CodeGenerationContext maincontext;
-        maincontext.drawAST(programBlock, astName);
+//        maincontext.drawAST(programBlock, astName);
         maincontext.generateCode(programBlock);
         maincontext.exportToObj(outputName);
 

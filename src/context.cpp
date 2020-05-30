@@ -114,7 +114,6 @@ void CodeGenerationContext::exportToObj(const string &filename) {
 }
 
 void CodeGenerationContext::drawAST(BlockNode *blockNode, const string &filename) {
-    fillInParent(blockNode);
     WriteGraph<BlockNode *>(blockNode, Twine("AST"), false, Twine(""), filename);
 }
 

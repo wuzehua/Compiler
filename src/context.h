@@ -22,6 +22,7 @@
 #include "syn.hpp"
 #include "type_helper.h"
 #include "GraphTraitsBlockNode.h"
+#include "DOTGraphTraitsBlockNode.h"
 
 using namespace llvm;
 using std::unique_ptr;
