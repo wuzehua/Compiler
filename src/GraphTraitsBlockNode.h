@@ -17,7 +17,7 @@ struct GraphTraits<BlockNode *> {
 
     class NodeIterator {
         int index = 0;
-        ASTNode *node = nullptr;
+        NodeRef node = nullptr;
         NodeIterator *parent;
 
         void findChild() {
@@ -28,9 +28,9 @@ struct GraphTraits<BlockNode *> {
             }
         };
     public:
-        NodeIterator(ASTNode *node, int index, NodeIterator *parent) : node(node), index(index), parent(parent) {};
+        NodeIterator(NodeRef node, int index, NodeIterator *parent) : node(node), index(index), parent(parent) {};
 
-        NodeIterator(ASTNode *node) : node(node), index(0), parent(nullptr) {
+        NodeIterator(NodeRef node) : node(node), index(0), parent(nullptr) {
             findChild();
         };
 
@@ -60,7 +60,7 @@ struct GraphTraits<BlockNode *> {
             return *node;
         }
 
-        ASTNode *operator->() {
+        NodeRef operator->() {
             return &(operator*());
         }
 
@@ -70,6 +70,8 @@ struct GraphTraits<BlockNode *> {
 
         bool operator!=(const NodeIterator &iterator) const { return !operator==(iterator); }
     };
+
+    using nodes_iterator = NodeIterator;
 
 };
 
