@@ -59,18 +59,18 @@ public:
         return nullptr;
     }
 
-    virtual void debugPrint(std::string prefix) const {}
+    virtual void debugPrint(const std::string &prefix) const {}
 
 };
 
 class ExpressionNode : public ASTNode {
 public:
 
-    [[nodiscard]] std::string getLabel() const {
+    [[nodiscard]] std::string getLabel() const override {
         return "ExpressionNode";
     }
 
-    [[nodiscard]] std::string getDescription() const {
+    [[nodiscard]] std::string getDescription() const override {
         return "";
     }
 };
@@ -78,11 +78,11 @@ public:
 class StatementNode : public ASTNode {
 public:
 
-    [[nodiscard]] std::string getLabel() const {
+    [[nodiscard]] std::string getLabel() const override {
         return "StatementNode";
     }
 
-    [[nodiscard]] std::string getDescription() const {
+    [[nodiscard]] std::string getDescription() const override {
         return "";
     }
 };
@@ -91,11 +91,11 @@ class IntegerNode : public ExpressionNode {
 public:
     int64_t value;
 
-    [[nodiscard]] std::string getLabel() const {
+    [[nodiscard]] std::string getLabel() const override {
         return "IntegerNode";
     }
 
-    [[nodiscard]] std::string getDescription() const {
+    [[nodiscard]] std::string getDescription() const override {
         return "value: " + std::to_string(value);
     }
 
@@ -103,7 +103,7 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(std::string prefix) const override {
+    void debugPrint(const std::string &prefix) const override {
         std::cout << prefix << "IntegerNode( value: " << value << ")\n";
     }
 };
@@ -112,11 +112,11 @@ class CharNode : public ExpressionNode {
 public:
     char value;
 
-    [[nodiscard]] std::string getLabel() const {
+    [[nodiscard]] std::string getLabel() const override {
         return "CharNode";
     }
 
-    [[nodiscard]] std::string getDescription() const {
+    [[nodiscard]] std::string getDescription() const override {
         return "value: " + std::to_string(value);
     }
 
@@ -124,7 +124,7 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(std::string prefix) const override {
+    void debugPrint(const std::string &prefix) const override {
         std::cout << prefix << "CharNode( value: " << value << ")\n";
     }
 };
@@ -133,11 +133,11 @@ class RealNode : public ExpressionNode {
 public:
     double value;
 
-    [[nodiscard]] std::string getLabel() const {
+    [[nodiscard]] std::string getLabel() const override {
         return "RealNode";
     }
 
-    [[nodiscard]] std::string getDescription() const {
+    [[nodiscard]] std::string getDescription() const override {
         return "value: " + std::to_string(value);
     }
 
@@ -145,7 +145,7 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(std::string prefix) const override {
+    void debugPrint(const std::string &prefix) const override {
         std::cout << prefix << "RealNode( value: " << value << ")\n";
     }
 };
@@ -154,11 +154,11 @@ class BoolNode : public ExpressionNode {
 public:
     bool value;
 
-    [[nodiscard]] std::string getLabel() const {
+    [[nodiscard]] std::string getLabel() const override {
         return "BoolNode";
     }
 
-    [[nodiscard]] std::string getDescription() const {
+    [[nodiscard]] std::string getDescription() const override {
         return "value: " + std::to_string(value);
     }
 
@@ -166,7 +166,7 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(std::string prefix) const override {
+    void debugPrint(const std::string &prefix) const override {
         std::cout << prefix << "BoolNode( value: " << value << ")\n";
     }
 };
@@ -179,11 +179,11 @@ public:
 
     shared_ptr<IntegerNode> arraySize = nullptr;
 
-    [[nodiscard]] std::string getLabel() const {
+    [[nodiscard]] std::string getLabel() const override {
         return "TypeNode";
     }
 
-    [[nodiscard]] std::string getDescription() const {
+    [[nodiscard]] std::string getDescription() const override {
         return "name: " + name + "\tisArray: " + std::to_string(isArray);
     }
 
@@ -191,7 +191,7 @@ public:
 
     TypeNode(std::string name, IntegerNode *&size) : name(std::move(name)), arraySize(size) {}
 
-    void debugPrint(std::string prefix) const override {
+    void debugPrint(const std::string &prefix) const override {
         std::cout << prefix << "TypeNode( name: " << name << ", isArray: " << isArray << ")\n";
     }
 };
@@ -201,11 +201,11 @@ class IdentifierNode : public ExpressionNode {
 public:
     std::string name;
 
-    [[nodiscard]] std::string getLabel() const {
+    [[nodiscard]] std::string getLabel() const override {
         return "IdentifierNode";
     }
 
-    [[nodiscard]] std::string getDescription() const {
+    [[nodiscard]] std::string getDescription() const override {
         return "name: " + name;
     }
 
@@ -214,7 +214,7 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(std::string prefix) const override {
+    void debugPrint(const std::string &prefix) const override {
         std::cout << prefix << "IdentifierNode( name: " << name << ")\n";
     }
 };
@@ -225,11 +225,11 @@ public:
     shared_ptr<ExpressionNode> rightExpr;
     int op;
 
-    [[nodiscard]] std::string getLabel() const {
+    [[nodiscard]] std::string getLabel() const override {
         return "BinaryOperatorNode";
     }
 
-    [[nodiscard]] std::string getDescription() const {
+    [[nodiscard]] std::string getDescription() const override {
         return "op: " + std::to_string(op);
     }
 
@@ -240,7 +240,7 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(std::string prefix) const override {
+    void debugPrint(const std::string &prefix) const override {
         std::cout << prefix << "BinaryOperatorNode( op: " << op << ")\n";
         std::cout << prefix << " LeftExpr:\n";
         leftExpr->debugPrint(prefix + "  ");
@@ -255,11 +255,11 @@ public:
     const shared_ptr<IdentifierNode> id;
     shared_ptr<ExpressionList> args;
 
-    [[nodiscard]] std::string getLabel() const {
+    [[nodiscard]] std::string getLabel() const override {
         return "FunctionCallNode";
     }
 
-    [[nodiscard]] std::string getDescription() const {
+    [[nodiscard]] std::string getDescription() const override {
         return "";
     }
 
@@ -270,7 +270,7 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(std::string prefix) const override {
+    void debugPrint(const std::string &prefix) const override {
         std::cout << prefix << "FunctionCallNode\n";
         std::cout << prefix << " id:\n";
         id->debugPrint(prefix + "  ");
@@ -288,11 +288,11 @@ public:
     shared_ptr<IdentifierNode> id;
     shared_ptr<ExpressionNode> expr;
 
-    [[nodiscard]] std::string getLabel() const {
+    [[nodiscard]] std::string getLabel() const override {
         return "AssignmentNode";
     }
 
-    [[nodiscard]] std::string getDescription() const {
+    [[nodiscard]] std::string getDescription() const override {
         return "";
     }
 
@@ -306,7 +306,7 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(std::string prefix) const override {
+    void debugPrint(const std::string &prefix) const override {
         std::cout << prefix << "AssignmentNode\n";
         std::cout << prefix << " id:\n";
         id->debugPrint(prefix + "  ");
@@ -322,11 +322,11 @@ public:
     shared_ptr<IdentifierNode> id;
     shared_ptr<ExpressionNode> index;
 
-    [[nodiscard]] std::string getLabel() const {
+    [[nodiscard]] std::string getLabel() const override {
         return "ArrayIndexNode";
     }
 
-    [[nodiscard]] std::string getDescription() const {
+    [[nodiscard]] std::string getDescription() const override {
         return "";
     }
 
@@ -337,7 +337,7 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(std::string prefix) const override {
+    void debugPrint(const std::string &prefix) const override {
         std::cout << prefix << "ArrayIndexNode\n";
         std::cout << prefix << " id:\n";
         id->debugPrint(prefix + "  ");
@@ -352,11 +352,11 @@ public:
     shared_ptr<ArrayIndexNode> element;
     shared_ptr<ExpressionNode> expr;
 
-    [[nodiscard]] std::string getLabel() const {
+    [[nodiscard]] std::string getLabel() const override {
         return "ArrayIndexAssignmentNode";
     }
 
-    [[nodiscard]] std::string getDescription() const {
+    [[nodiscard]] std::string getDescription() const override {
         return "";
     }
 
@@ -365,7 +365,7 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(std::string prefix) const override {
+    void debugPrint(const std::string &prefix) const override {
         std::cout << prefix << "ArrayIndexAssignmentNode\n";
         std::cout << prefix << " element:\n";
         element->debugPrint(prefix + "  ");
@@ -379,11 +379,11 @@ class BlockNode : public StatementNode {
 public:
     StatementList statements;
 
-    [[nodiscard]] std::string getLabel() const {
+    [[nodiscard]] std::string getLabel() const override {
         return "BlockNode";
     }
 
-    [[nodiscard]] std::string getDescription() const {
+    [[nodiscard]] std::string getDescription() const override {
         return "";
     }
 
@@ -391,7 +391,7 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(std::string prefix) const override {
+    void debugPrint(const std::string &prefix) const override {
         std::cout << prefix << "BlockNode\n";
         std::cout << prefix << " statements:\n";
         for (auto &stat: statements) {
@@ -406,11 +406,11 @@ public:
     shared_ptr<IdentifierNode> id;
     shared_ptr<ExpressionNode> assignmentExpr; //Nullable
 
-    [[nodiscard]] std::string getLabel() const {
+    [[nodiscard]] std::string getLabel() const override {
         return "VariableDeclarationNode";
     }
 
-    [[nodiscard]] std::string getDescription() const {
+    [[nodiscard]] std::string getDescription() const override {
         return "";
     }
 
@@ -425,7 +425,7 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(std::string prefix) const override {
+    void debugPrint(const std::string &prefix) const override {
         std::cout << prefix << "VariableDeclarationNode\n";
         std::cout << prefix << " type:\n";
         type->debugPrint(prefix + "  ");
@@ -442,11 +442,11 @@ class ExpressionStatementNode : public StatementNode {
 public:
     shared_ptr<ExpressionNode> expr;
 
-    [[nodiscard]] std::string getLabel() const {
+    [[nodiscard]] std::string getLabel() const override {
         return "ExpressionStatementNode";
     }
 
-    [[nodiscard]] std::string getDescription() const {
+    [[nodiscard]] std::string getDescription() const override {
         return "";
     }
 
@@ -456,7 +456,7 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(std::string prefix) const override {
+    void debugPrint(const std::string &prefix) const override {
         std::cout << prefix << "ExpressionStatementNode\n";
         std::cout << prefix << " expr:\n";
         expr->debugPrint(prefix + "  ");
@@ -472,11 +472,11 @@ public:
     shared_ptr<BlockNode> block;
     bool external;
 
-    [[nodiscard]] std::string getLabel() const {
+    [[nodiscard]] std::string getLabel() const override {
         return "FunctionDeclarationNode";
     }
 
-    [[nodiscard]] std::string getDescription() const {
+    [[nodiscard]] std::string getDescription() const override {
         return "";
     }
 
@@ -488,7 +488,7 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(std::string prefix) const override {
+    void debugPrint(const std::string &prefix) const override {
         std::cout << prefix << "FunctionDeclarationNode\n";
 
         std::cout << prefix << " type:\n";
@@ -521,11 +521,11 @@ public:
     shared_ptr<BlockNode> trueBlock;
     shared_ptr<BlockNode> falseBlock;
 
-    [[nodiscard]] std::string getLabel() const {
+    [[nodiscard]] std::string getLabel() const override {
         return "IfStatementNode";
     }
 
-    [[nodiscard]] std::string getDescription() const {
+    [[nodiscard]] std::string getDescription() const override {
         return "";
     }
 
@@ -535,7 +535,7 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(std::string prefix) const override {
+    void debugPrint(const std::string &prefix) const override {
         std::cout << prefix << "IfStatementNode\n";
         std::cout << prefix << " condition:\n";
         condition->debugPrint(prefix + "  ");
@@ -555,11 +555,11 @@ public:
     shared_ptr<ExpressionNode> condition;
     shared_ptr<BlockNode> block;
 
-    [[nodiscard]] std::string getLabel() const {
+    [[nodiscard]] std::string getLabel() const override {
         return "WhileStatementNode";
     }
 
-    [[nodiscard]] std::string getDescription() const {
+    [[nodiscard]] std::string getDescription() const override {
         return "";
     }
 
@@ -568,7 +568,7 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(std::string prefix) const override {
+    void debugPrint(const std::string &prefix) const override {
         std::cout << prefix << "WhileStatementNode\n";
         std::cout << prefix << " condition:\n";
         condition->debugPrint(prefix + "  ");
@@ -582,11 +582,11 @@ class ReturnStatementNode : public StatementNode {
 public:
     shared_ptr<ExpressionNode> expr;
 
-    [[nodiscard]] std::string getLabel() const {
+    [[nodiscard]] std::string getLabel() const override {
         return "ReturnStatementNode";
     }
 
-    [[nodiscard]] std::string getDescription() const {
+    [[nodiscard]] std::string getDescription() const override {
         return "";
     }
 
@@ -594,7 +594,7 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(std::string prefix) const override {
+    void debugPrint(const std::string &prefix) const override {
         std::cout << prefix << "ReturnStatementNode\n";
         std::cout << prefix << " expr:\n";
         if (expr) {
