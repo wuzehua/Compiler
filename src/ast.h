@@ -75,7 +75,7 @@ public:
         return "";
     }
 
-    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+    [[nodiscard]] std::vector<ASTNode *> getChildren() const override {
         return std::vector<ASTNode *>(0);
     }
 };
@@ -91,7 +91,7 @@ public:
         return "";
     }
 
-    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+    [[nodiscard]] std::vector<ASTNode *> getChildren() const override {
         return std::vector<ASTNode *>(0);
     }
 };
@@ -108,7 +108,7 @@ public:
         return "value = " + std::to_string(value);
     }
 
-    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+    [[nodiscard]] std::vector<ASTNode *> getChildren() const override {
         return std::vector<ASTNode *>(0);
     }
 
@@ -133,7 +133,7 @@ public:
         return "value = '" + std::to_string(value) + "'";
     }
 
-    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+    [[nodiscard]] std::vector<ASTNode *> getChildren() const override {
         return std::vector<ASTNode *>(0);
     }
 
@@ -158,7 +158,7 @@ public:
         return "value = " + std::to_string(value);
     }
 
-    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+    [[nodiscard]] std::vector<ASTNode *> getChildren() const override {
         return std::vector<ASTNode *>(0);
     }
 
@@ -183,7 +183,7 @@ public:
         return "value = " + std::to_string(value);
     }
 
-    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+    [[nodiscard]] std::vector<ASTNode *> getChildren() const override {
         return std::vector<ASTNode *>(0);
     }
 
@@ -212,7 +212,7 @@ public:
         return "name = " + name + "\nisArray = " + std::to_string(isArray);
     }
 
-    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+    [[nodiscard]] std::vector<ASTNode *> getChildren() const override {
         auto res = std::vector<ASTNode *>(0);
         if (isArray) {
             res.emplace_back(arraySize.get());
@@ -242,7 +242,7 @@ public:
         return "name = " + name;
     }
 
-    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+    [[nodiscard]] std::vector<ASTNode *> getChildren() const override {
         return std::vector<ASTNode *>(0);
     }
 
@@ -270,7 +270,7 @@ public:
         return "op = " + std::to_string(op);
     }
 
-    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+    [[nodiscard]] std::vector<ASTNode *> getChildren() const override {
         auto res = std::vector<ASTNode *>(0);
         res.emplace_back(leftExpr.get());
         res.emplace_back(rightExpr.get());
@@ -307,7 +307,7 @@ public:
         return "";
     }
 
-    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+    [[nodiscard]] std::vector<ASTNode *> getChildren() const override {
         auto res = std::vector<ASTNode *>(0);
         res.emplace_back(id.get());
         if (args) {
@@ -351,7 +351,7 @@ public:
         return "";
     }
 
-    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+    [[nodiscard]] std::vector<ASTNode *> getChildren() const override {
         auto res = std::vector<ASTNode *>(0);
         res.emplace_back(id.get());
         res.emplace_back(expr.get());
@@ -392,7 +392,7 @@ public:
         return "";
     }
 
-    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+    [[nodiscard]] std::vector<ASTNode *> getChildren() const override {
         auto res = std::vector<ASTNode *>(0);
         res.emplace_back(id.get());
         res.emplace_back(index.get());
@@ -429,7 +429,7 @@ public:
         return "";
     }
 
-    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+    [[nodiscard]] std::vector<ASTNode *> getChildren() const override {
         auto res = std::vector<ASTNode *>(0);
         res.emplace_back(element.get());
         res.emplace_back(expr.get());
@@ -463,7 +463,7 @@ public:
         return "";
     }
 
-    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+    [[nodiscard]] std::vector<ASTNode *> getChildren() const override {
         auto res = std::vector<ASTNode *>(0);
         for (auto &stat: statements) {
             res.emplace_back(stat.get());
@@ -498,7 +498,7 @@ public:
         return "";
     }
 
-    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+    [[nodiscard]] std::vector<ASTNode *> getChildren() const override {
         auto res = std::vector<ASTNode *>(0);
         res.emplace_back(type.get());
         res.emplace_back(id.get());
@@ -544,7 +544,7 @@ public:
         return "";
     }
 
-    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+    [[nodiscard]] std::vector<ASTNode *> getChildren() const override {
         auto res = std::vector<ASTNode *>(0);
         res.emplace_back(expr.get());
         return res;
@@ -580,7 +580,7 @@ public:
         return "";
     }
 
-    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+    [[nodiscard]] std::vector<ASTNode *> getChildren() const override {
         auto res = std::vector<ASTNode *>(0);
         if (type) {
             res.emplace_back(type.get());
@@ -650,7 +650,7 @@ public:
         return "";
     }
 
-    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+    [[nodiscard]] std::vector<ASTNode *> getChildren() const override {
         auto res = std::vector<ASTNode *>(0);
         res.emplace_back(condition.get());
         res.emplace_back(trueBlock.get());
@@ -694,7 +694,7 @@ public:
         return "";
     }
 
-    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+    [[nodiscard]] std::vector<ASTNode *> getChildren() const override {
         auto res = std::vector<ASTNode *>(0);
         res.emplace_back(condition.get());
         res.emplace_back(block.get());
@@ -728,7 +728,7 @@ public:
         return "";
     }
 
-    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+    [[nodiscard]] std::vector<ASTNode *> getChildren() const override {
         auto res = std::vector<ASTNode *>(0);
         res.emplace_back(expr.get());
         return res;

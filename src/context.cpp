@@ -158,7 +158,7 @@ int CodeGenerationContext::fillInParentAndName(ASTNode *node, int index) {
     node->umlName = node->getLabel() + std::to_string(index);
     for (auto child : node->getChildren()) {
         child->parent = node;
-        index = fillInParentAndName(child, index + 1) + 1;
+        index = fillInParentAndName(child, index + 1);
     }
     return index;
 }
