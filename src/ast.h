@@ -32,6 +32,7 @@ using std::make_shared;
 class ASTNode {
 public:
     ASTNode *parent = nullptr;
+    std::string umlName;
 
     [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const {
         return std::vector<ASTNode *>(0);
@@ -184,7 +185,7 @@ public:
     }
 
     [[nodiscard]] std::string getDescription() const override {
-        return "name: " + name + "\tisArray: " + std::to_string(isArray);
+        return "name: " + name + "\nisArray: " + std::to_string(isArray);
     }
 
     explicit TypeNode(std::string name) : name(std::move(name)) {}

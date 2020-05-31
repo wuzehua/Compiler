@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
     yyin = nullptr;
     char *filename;
     string outputName = "a.o";
-    string astName = "ast.png";
+    string astName = "ast.puml";
 
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-i") == 0) {
@@ -55,7 +55,6 @@ int main(int argc, char **argv) {
 
     if (yyin != nullptr) {
         yyparse();
-
         programBlock->debugPrint("");
         CodeGenerationContext maincontext;
 //        maincontext.drawAST(programBlock, astName);
