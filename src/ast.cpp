@@ -16,7 +16,7 @@
 
 
 ValuePtr IntegerNode::generateCode(CodeGenerationContext &context) const {
-    Type *type = Type::getInt64Ty(context.llvmContext); //设置返回值的类型为int32
+    Type *type = Type::getInt64Ty(context.llvmContext); 
     return llvm::ConstantInt::get(type, value, true);
 }
 
@@ -41,14 +41,7 @@ ValuePtr IdentifierNode::generateCode(CodeGenerationContext &context) const {
         Log::raiseError("Unknown variable name " + this->name, std::cout);
         return nullptr;
     }
-
-    if(value->getType()->isPointerTy()){
-        Log::raiseWarning("Access array pointer is not supported yet.", std::cout);
-        return nullptr;
-    }
-
-
-    return context.builder.CreateLoad(value, false, "");
+    return context.builder.CreateLoad(value, false);
 }
 
 
@@ -171,18 +164,20 @@ ValuePtr FunctionCallNode::generateCode(CodeGenerationContext &context) const {
 
     if (calleeF->arg_size() != args->size()) {
         Log::raiseError("Function args number not match, " + id->name + " requires " + std::to_string(calleeF->size()) +
-                        "args, but " + std::to_string(args ? args->size() : 0) + "args are given", std::cout);
+                        "args, but " + std::to_string(args->size()) + "args are given", std::cout);
         return nullptr;
     }
 
     std::vector<ValuePtr> argsList;
 
-
-    for (auto &it : *args) {
-        auto argPtr = it->generateCode(context);
+    auto funcArg = calleeF->arg_begin();
+    auto it = args->begin();
+    for (;it != args->end() && funcArg != calleeF->arg_end(); it++, funcArg++) {
+        auto argPtr = (*it)->generateCode(context);
         if (!argPtr) {
             return nullptr;
         } else {
+            argPtr = context.typeHelper.cast(argPtr, funcArg->getType(), context.getCurrentBasicBlock());
             argsList.emplace_back(argPtr);
         }
     }
@@ -254,10 +249,9 @@ ValuePtr ArrayIndexAssignmentNode::generateCode(CodeGenerationContext &context) 
 }
 
 ValuePtr BlockNode::generateCode(CodeGenerationContext &context) const {
-    ValuePtr value = nullptr;
     for (const auto &statement : this->statements)
-        value = statement->generateCode(context);
-    return value;
+        statement->generateCode(context);
+    return nullptr;
 }
 
 ValuePtr VariableDeclarationNode::generateCode(CodeGenerationContext &context) const {

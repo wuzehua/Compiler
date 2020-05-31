@@ -58,7 +58,7 @@ ValuePtr TypeHelper::cast(ValuePtr value, TypePtr type, BasicBlock *block) {
     }
 
     CastInst::CastOps ops;
-    if (origin == typeCollection.getVarType("int") && type == typeCollection.getVarType("double")) {
+    if (origin->getTypeID() == Type::IntegerTyID && type->getTypeID() == Type::DoubleTyID) {
         ops = CastInst::SIToFP;
     } else if (origin == typeCollection.getVarType("double") && type == typeCollection.getVarType("int")) {
         ops = CastInst::FPToSI;
@@ -78,7 +78,7 @@ string TypeHelper::llvmTypeToStr(ValuePtr value) {
     if (value)
         return llvmTypeToStr(value->getType());
     else
-        return "Value is nullptr";
+        return "No input type";
 }
 
 string TypeHelper::llvmTypeToStr(TypePtr value) {
@@ -86,19 +86,19 @@ string TypeHelper::llvmTypeToStr(TypePtr value) {
     if (value)
         typeID = value->getTypeID();
     else
-        return "Value is nullptr";
+        return "No input type";
 
     switch (typeID) {
         case Type::VoidTyID:
-            return "VoidTyID";
+            return "Void";
         case Type::DoubleTyID:
-            return "DoubleTyID";
+            return "Double";
         case Type::IntegerTyID:
-            return "IntegerTyID";
+            return "Integer";
         case Type::FunctionTyID:
-            return "FunctionTyID";
+            return "Function";
         case Type::ArrayTyID:
-            return "ArrayTyID";
+            return "Array";
         default:
             return "Unknown";
     }

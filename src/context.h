@@ -21,8 +21,8 @@
 #include "ast.h"
 #include "syn.hpp"
 #include "type_helper.h"
-#include "GraphTraitsBlockNode.h"
-#include "DOTGraphTraitsBlockNode.h"
+// #include "GraphTraitsBlockNode.h"
+// #include "DOTGraphTraitsBlockNode.h"
 
 using namespace llvm;
 using std::unique_ptr;
@@ -186,7 +186,7 @@ public:
     }
 
 
-    void PrintSymTable() const {
+    void printSymTable() const {
         std::cout << "[Symbol Table]\n\n";
         auto temp = currentBlock;
         int index = 0;
@@ -214,7 +214,7 @@ public:
 
     void drawAST(BlockNode *blockNode, const string &filename);
 
-    void generateCode(BlockNode *blockNode);
+    void generateCode(BlockNode *blockNode, const string& filename);
 
     void exportToObj(const string &filename);
 

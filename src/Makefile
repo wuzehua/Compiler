@@ -1,4 +1,4 @@
-all: compiler
+all: clang-- move
 
 OBJS = 	ast.o\
 		context.o \
@@ -34,9 +34,9 @@ lex.cpp: lex.l syn.hpp
 %.o: %.cpp
 	g++ -c $(CPPFLAGS) -o $(BUILD_DIR)/$@ $<
 
-compiler: $(OBJS)
+clang--: $(OBJS)
 	g++ $(CPPFLAGS) -o $(BUILD_DIR)/$@ $(BUILD_DIR)/*.o $(LIBS) $(LDFLAGS)
 
 move: 
-	mv $(BUILD_DIR)/compiler $(TEST_DIR)/clang--
+	mv $(BUILD_DIR)/clang-- $(TEST_DIR)/clang--
 

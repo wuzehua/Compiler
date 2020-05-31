@@ -36,7 +36,7 @@ using std::vector;
 using llvm::LLVMContext;
 
 
-void CodeGenerationContext::generateCode(BlockNode *blockNode) {
+void CodeGenerationContext::generateCode(BlockNode *blockNode, const string& filename) {
 
     Log::raiseMessage("Start to generate LLVM IR", std::cout);
 
@@ -45,8 +45,8 @@ void CodeGenerationContext::generateCode(BlockNode *blockNode) {
     auto value = blockNode->generateCode(*this);
     popCurrentCodeBlock();
 
-    std::error_code EC;
-    raw_fd_ostream dest("test.ll", EC, sys::fs::OF_None);
+    std::error_code errorCode;
+    raw_fd_ostream dest(filename, errorCode, sys::fs::OF_None);
 
     legacy::PassManager pass;
     pass.add(createPrintModulePass(dest));

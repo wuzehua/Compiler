@@ -59,7 +59,7 @@ public:
         return nullptr;
     }
 
-    virtual void debugPrint(const std::string &prefix) const {}
+    virtual void debugPrint(const std::string &prefix, std::ostream& os) const {}
 
 };
 
@@ -103,8 +103,8 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix) const override {
-        std::cout << prefix << "IntegerNode( value: " << value << ")\n";
+    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+        os << prefix << "IntegerNode( value: " << value << ")\n";
     }
 };
 
@@ -124,8 +124,8 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix) const override {
-        std::cout << prefix << "CharNode( value: " << value << ")\n";
+    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+        os << prefix << "CharNode( value: " << value << ")\n";
     }
 };
 
@@ -145,8 +145,8 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix) const override {
-        std::cout << prefix << "RealNode( value: " << value << ")\n";
+    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+        os << prefix << "RealNode( value: " << value << ")\n";
     }
 };
 
@@ -166,8 +166,8 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix) const override {
-        std::cout << prefix << "BoolNode( value: " << value << ")\n";
+    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+        os << prefix << "BoolNode( value: " << value << ")\n";
     }
 };
 
@@ -191,8 +191,8 @@ public:
 
     TypeNode(std::string name, IntegerNode *&size) : name(std::move(name)), arraySize(size) {}
 
-    void debugPrint(const std::string &prefix) const override {
-        std::cout << prefix << "TypeNode( name: " << name << ", isArray: " << isArray << ")\n";
+    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+        os << prefix << "TypeNode( name: " << name << ", isArray: " << isArray << ")\n";
     }
 };
 
@@ -214,8 +214,8 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix) const override {
-        std::cout << prefix << "IdentifierNode( name: " << name << ")\n";
+    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+        os << prefix << "IdentifierNode( name: " << name << ")\n";
     }
 };
 
@@ -240,12 +240,12 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix) const override {
-        std::cout << prefix << "BinaryOperatorNode( op: " << op << ")\n";
-        std::cout << prefix << " LeftExpr:\n";
-        leftExpr->debugPrint(prefix + "  ");
-        std::cout << prefix << " RightExpr:\n";
-        rightExpr->debugPrint(prefix + "  ");
+    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+        os << prefix << "BinaryOperatorNode( op: " << op << ")\n";
+        os << prefix << " LeftExpr:\n";
+        leftExpr->debugPrint(prefix + "  ", os);
+        os << prefix << " RightExpr:\n";
+        rightExpr->debugPrint(prefix + "  ", os);
     }
 };
 
@@ -270,14 +270,14 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix) const override {
-        std::cout << prefix << "FunctionCallNode\n";
-        std::cout << prefix << " id:\n";
-        id->debugPrint(prefix + "  ");
-        std::cout << prefix << " args:\n";
+    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+        os << prefix << "FunctionCallNode\n";
+        os << prefix << " id:\n";
+        id->debugPrint(prefix + "  ", os);
+        os << prefix << " args:\n";
         if (args) {
             for (auto i = 0; i < args->size(); i++) {
-                ((*args)[i])->debugPrint(prefix + "  ");
+                ((*args)[i])->debugPrint(prefix + "  ", os);
             }
         }
     }
@@ -306,12 +306,12 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix) const override {
-        std::cout << prefix << "AssignmentNode\n";
-        std::cout << prefix << " id:\n";
-        id->debugPrint(prefix + "  ");
-        std::cout << prefix << " expr:\n";
-        expr->debugPrint(prefix + "  ");
+    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+        os << prefix << "AssignmentNode\n";
+        os << prefix << " id:\n";
+        id->debugPrint(prefix + "  ", os);
+        os << prefix << " expr:\n";
+        expr->debugPrint(prefix + "  ", os);
     }
 
 };
@@ -337,12 +337,12 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix) const override {
-        std::cout << prefix << "ArrayIndexNode\n";
-        std::cout << prefix << " id:\n";
-        id->debugPrint(prefix + "  ");
-        std::cout << prefix << " index:\n";
-        index->debugPrint(prefix + "  ");
+    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+        os << prefix << "ArrayIndexNode\n";
+        os << prefix << " id:\n";
+        id->debugPrint(prefix + "  ", os);
+        os << prefix << " index:\n";
+        index->debugPrint(prefix + "  ", os);
     }
 };
 
@@ -365,12 +365,12 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix) const override {
-        std::cout << prefix << "ArrayIndexAssignmentNode\n";
-        std::cout << prefix << " element:\n";
-        element->debugPrint(prefix + "  ");
-        std::cout << prefix << " expr:\n";
-        expr->debugPrint(prefix + "  ");
+    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+        os << prefix << "ArrayIndexAssignmentNode\n";
+        os << prefix << " element:\n";
+        element->debugPrint(prefix + "  ", os);
+        os << prefix << " expr:\n";
+        expr->debugPrint(prefix + "  ", os);
     }
 };
 
@@ -391,11 +391,11 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix) const override {
-        std::cout << prefix << "BlockNode\n";
-        std::cout << prefix << " statements:\n";
+    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+        os << prefix << "BlockNode\n";
+        os << prefix << " statements:\n";
         for (auto &stat: statements) {
-            stat->debugPrint(prefix + "  ");
+            stat->debugPrint(prefix + "  ", os);
         }
     }
 };
@@ -425,15 +425,15 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix) const override {
-        std::cout << prefix << "VariableDeclarationNode\n";
-        std::cout << prefix << " type:\n";
-        type->debugPrint(prefix + "  ");
-        std::cout << prefix << " id:\n";
-        id->debugPrint(prefix + "  ");
+    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+        os << prefix << "VariableDeclarationNode\n";
+        os << prefix << " type:\n";
+        type->debugPrint(prefix + "  ", os);
+        os << prefix << " id:\n";
+        id->debugPrint(prefix + "  ", os);
         if (assignmentExpr) {
-            std::cout << prefix << " expr:\n";
-            assignmentExpr->debugPrint(prefix + "  ");
+            os << prefix << " expr:\n";
+            assignmentExpr->debugPrint(prefix + "  ", os);
         }
     }
 };
@@ -456,10 +456,10 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix) const override {
-        std::cout << prefix << "ExpressionStatementNode\n";
-        std::cout << prefix << " expr:\n";
-        expr->debugPrint(prefix + "  ");
+    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+        os << prefix << "ExpressionStatementNode\n";
+        os << prefix << " expr:\n";
+        expr->debugPrint(prefix + "  ", os);
     }
 
 };
@@ -488,28 +488,32 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix) const override {
-        std::cout << prefix << "FunctionDeclarationNode\n";
+    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+        os << prefix << "FunctionDeclarationNode\n";
 
-        std::cout << prefix << " type:\n";
+        os << prefix << " type:\n";
         if (type) {
-            type->debugPrint(prefix + "  ");
+            type->debugPrint(prefix + "  ", os);
         } else {
-            std::cout << prefix << "  Void\n";
+            os << prefix << "  Void\n";
         }
 
-        std::cout << prefix << " id:\n";
-        id->debugPrint(prefix + "  ");
+        os << prefix << " id:\n";
+        id->debugPrint(prefix + "  ", os);
 
-        std::cout << prefix << " args:\n";
+        os << prefix << " args:\n";
         if (args) {
             for (auto i = 0; i < args->size(); i++) {
-                ((*args)[i])->debugPrint(prefix + "  ");
+                ((*args)[i])->debugPrint(prefix + "  ", os);
             }
         }
 
-        std::cout << prefix << " block:\n";
-        block->debugPrint(prefix + "  ");
+        os << prefix << " block:\n";
+        if(block){
+            block->debugPrint(prefix + "  ", os);
+        }else{
+            os<<prefix<<"  NULL\n";
+        }
     }
 
 };
@@ -535,15 +539,15 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix) const override {
-        std::cout << prefix << "IfStatementNode\n";
-        std::cout << prefix << " condition:\n";
-        condition->debugPrint(prefix + "  ");
-        std::cout << prefix << " trueBlock:\n";
-        trueBlock->debugPrint(prefix + "  ");
+    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+        os << prefix << "IfStatementNode\n";
+        os << prefix << " condition:\n";
+        condition->debugPrint(prefix + "  ", os);
+        os << prefix << " trueBlock:\n";
+        trueBlock->debugPrint(prefix + "  ", os);
         if (falseBlock) {
-            std::cout << prefix << " falseBlock:\n";
-            falseBlock->debugPrint(prefix + "  ");
+            os << prefix << " falseBlock:\n";
+            falseBlock->debugPrint(prefix + "  ", os);
         }
     }
 
@@ -568,12 +572,12 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix) const override {
-        std::cout << prefix << "WhileStatementNode\n";
-        std::cout << prefix << " condition:\n";
-        condition->debugPrint(prefix + "  ");
-        std::cout << prefix << " Block:\n";
-        block->debugPrint(prefix + "  ");
+    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+        os << prefix << "WhileStatementNode\n";
+        os << prefix << " condition:\n";
+        condition->debugPrint(prefix + "  ", os);
+        os << prefix << " Block:\n";
+        block->debugPrint(prefix + "  ", os);
     }
 
 };
@@ -594,13 +598,13 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix) const override {
-        std::cout << prefix << "ReturnStatementNode\n";
-        std::cout << prefix << " expr:\n";
+    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+        os << prefix << "ReturnStatementNode\n";
+        os << prefix << " expr:\n";
         if (expr) {
-            expr->debugPrint(prefix + "  ");
+            expr->debugPrint(prefix + "  ", os);
         } else {
-            std::cout << prefix << "  Null\n";
+            os << prefix << "  Null\n";
         }
 
     }
