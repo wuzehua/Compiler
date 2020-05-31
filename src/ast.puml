@@ -1,0 +1,116 @@
+@startuml
+
+abstract class ASTNode
+abstract class ExpressionNode
+abstract class StatementNode
+
+ASTNode <|-- ExpressionNode
+ASTNode <|-- StatementNode
+
+ExpressionNode <|-- IntegerNode
+ExpressionNode <|-- CharNode
+ExpressionNode <|-- RealNode
+ExpressionNode <|-- BoolNode
+ExpressionNode <|-- TypeNode
+ExpressionNode <|-- IdentifierNode
+ExpressionNode <|-- BinaryOperatorNode
+ExpressionNode <|-- FunctionCallNode
+ExpressionNode <|-- AssignmentNode
+ExpressionNode <|-- ArrayIndexNode
+ExpressionNode <|-- ArrayIndexAssignmentNode
+
+StatementNode <|-- BlockNode
+StatementNode <|-- VariableDeclarationNode
+StatementNode <|-- ExpressionStatementNode
+StatementNode <|-- FunctionDeclarationNode
+StatementNode <|-- IfStatementNode
+StatementNode <|-- WhileStatementNode
+
+class IntegerNode {
+int64_t value
+}
+
+class CharNode {
+char value
+}
+
+class RealNode {
+double value
+}
+
+class BoolNode {
+bool value
+}
+
+class TypeNode {
+    std::string name;
+    bool isArray = false;
+
+    shared_ptr<IntegerNode> arraySize = nullptr;
+}
+
+class IdentifierNode {
+string name
+}
+
+class BinaryOperatorNode {
+    shared_ptr<ExpressionNode> leftExpr;
+    shared_ptr<ExpressionNode> rightExpr;
+    int op;
+}
+
+class FunctionCallNode {
+    const shared_ptr<IdentifierNode> id;
+    shared_ptr<ExpressionList> args;
+}
+
+class AssignmentNode {
+    shared_ptr<IdentifierNode> id;
+    shared_ptr<ExpressionNode> expr;
+}
+
+class ArrayIndexNode {
+    shared_ptr<IdentifierNode> id;
+    shared_ptr<ExpressionNode> index;
+}
+
+class ArrayIndexAssignmentNode {
+    shared_ptr<ArrayIndexNode> element;
+    shared_ptr<ExpressionNode> expr;
+}
+
+
+class BlockNode {
+    StatementList statements;
+}
+
+class VariableDeclarationNode {
+    shared_ptr<TypeNode> type;
+    shared_ptr<IdentifierNode> id;
+    shared_ptr<ExpressionNode> assignmentExpr; //Nullable
+}
+
+class ExpressionStatementNode {
+    shared_ptr<ExpressionNode> expr;
+}
+
+class FunctionDeclarationNode {
+    shared_ptr<TypeNode> type;
+    shared_ptr<IdentifierNode> id;
+    shared_ptr<VariableList> args;
+    shared_ptr<BlockNode> block;
+    bool external;
+}
+
+class IfStatementNode {
+    shared_ptr<ExpressionNode> condition;
+    shared_ptr<BlockNode> trueBlock;
+    shared_ptr<BlockNode> falseBlock;
+}
+
+class WhileStatementNode {
+    shared_ptr<ExpressionNode> condition;
+    shared_ptr<BlockNode> block;
+}
+
+@enduml

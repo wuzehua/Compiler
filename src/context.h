@@ -210,7 +210,7 @@ public:
         }
     }
 
-    void fillInParent(ASTNode *node);
+    int fillInParentAndName(ASTNode *node, int index = 0);
 
     void drawAST(BlockNode *blockNode, const string &filename);
 

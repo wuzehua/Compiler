@@ -40,8 +40,6 @@ int main(int argc, char **argv) {
     bool printAst = false;
     char *filename;
     string outputName = "a.o";
-    string astName = "ast.png";
-    string astFilename = "ast.ast";
     string irFilename = "ir.ll";
     ofstream file;
 
@@ -49,6 +47,7 @@ int main(int argc, char **argv) {
         showHelp();
         return 0;
     }
+    string astName = "ast.puml";
 
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-i") == 0) {

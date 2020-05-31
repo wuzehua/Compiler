@@ -2,7 +2,7 @@
 // Created by 郑文浩 on 2020/5/23.
 //
 
-
+#include <fstream>
 #include <iostream>
 #include <vector>
 
@@ -113,13 +113,49 @@ void CodeGenerationContext::exportToObj(const string &filename) {
 
 }
 
-void CodeGenerationContext::drawAST(BlockNode *blockNode, const string &filename) {
-//    WriteGraph<BlockNode *>(blockNode, Twine("AST"), false, Twine(""), filename);
+void writeLabel(ASTNode *node, std::string &umlStr) {
+    umlStr += "object " + node->umlName + "\n";
+    for (auto child : node->getChildren()) {
+        writeLabel(child, umlStr);
+    }
 }
 
-void CodeGenerationContext::fillInParent(ASTNode *node) {
+void writeRelation(ASTNode *node, std::string &umlStr) {
+    if (node->parent) {
+        umlStr += node->umlName + " <|-- " + node->parent->umlName + "\n";
+    }
+    for (auto child : node->getChildren()) {
+        writeRelation(child, umlStr);
+    }
+}
+
+void CodeGenerationContext::drawAST(BlockNode *blockNode, const string &filename) {
+    std::string umlStr = "@startuml\n";
+    fillInParentAndName(blockNode);
+    writeLabel(blockNode, umlStr);
+    writeRelation(blockNode, umlStr);
+//    for (auto iter = GraphTraits<BlockNode *>::nodes_begin(blockNode);
+//         iter != GraphTraits<BlockNode *>::nodes_end(blockNode); ++iter) {
+//        umlStr += "object " + (*iter)->umlName + "\n";
+//    };
+//    umlStr += "\n";
+//    for (auto iter = GraphTraits<BlockNode *>::nodes_begin(blockNode);
+//         iter != GraphTraits<BlockNode *>::nodes_end(blockNode); ++iter) {
+//        if ((*iter)->parent) {
+//            umlStr += (*iter)->umlName + " <|-- " + (*iter)->parent->umlName + "\n";
+//        }
+//    };
+    umlStr += "\n";
+    umlStr += "@enduml";
+    std::ofstream fWriter(filename);
+    fWriter << umlStr;
+}
+
+int CodeGenerationContext::fillInParentAndName(ASTNode *node, int index) {
+    node->umlName = node->getLabel() + std::to_string(index);
     for (auto child : node->getChildren()) {
         child->parent = node;
-        fillInParent(child);
+        index = fillInParentAndName(child, index + 1) + 1;
     }
+    return index;
 }
