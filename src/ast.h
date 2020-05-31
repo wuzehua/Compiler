@@ -60,7 +60,7 @@ public:
         return nullptr;
     }
 
-    virtual void debugPrint(const std::string &prefix, std::ostream& os) const {}
+    virtual void debugPrint(const std::string &prefix, std::ostream &os) const {}
 
 };
 
@@ -74,6 +74,10 @@ public:
     [[nodiscard]] std::string getDescription() const override {
         return "";
     }
+
+    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+        return std::vector<ASTNode *>(0);
+    }
 };
 
 class StatementNode : public ASTNode {
@@ -86,6 +90,10 @@ public:
     [[nodiscard]] std::string getDescription() const override {
         return "";
     }
+
+    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+        return std::vector<ASTNode *>(0);
+    }
 };
 
 class IntegerNode : public ExpressionNode {
@@ -97,14 +105,18 @@ public:
     }
 
     [[nodiscard]] std::string getDescription() const override {
-        return "value: " + std::to_string(value);
+        return "value = " + std::to_string(value);
+    }
+
+    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+        return std::vector<ASTNode *>(0);
     }
 
     explicit IntegerNode(const int64_t &value) : value(value) {}
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+    void debugPrint(const std::string &prefix, std::ostream &os) const override {
         os << prefix << "IntegerNode( value: " << value << ")\n";
     }
 };
@@ -118,14 +130,18 @@ public:
     }
 
     [[nodiscard]] std::string getDescription() const override {
-        return "value: " + std::to_string(value);
+        return "value = '" + std::to_string(value) + "'";
+    }
+
+    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+        return std::vector<ASTNode *>(0);
     }
 
     explicit CharNode(const char &value) : value(value) {}
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+    void debugPrint(const std::string &prefix, std::ostream &os) const override {
         os << prefix << "CharNode( value: " << value << ")\n";
     }
 };
@@ -139,14 +155,18 @@ public:
     }
 
     [[nodiscard]] std::string getDescription() const override {
-        return "value: " + std::to_string(value);
+        return "value = " + std::to_string(value);
+    }
+
+    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+        return std::vector<ASTNode *>(0);
     }
 
     explicit RealNode(const double &value) : value(value) {}
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+    void debugPrint(const std::string &prefix, std::ostream &os) const override {
         os << prefix << "RealNode( value: " << value << ")\n";
     }
 };
@@ -160,14 +180,18 @@ public:
     }
 
     [[nodiscard]] std::string getDescription() const override {
-        return "value: " + std::to_string(value);
+        return "value = " + std::to_string(value);
+    }
+
+    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+        return std::vector<ASTNode *>(0);
     }
 
     explicit BoolNode(const bool &value) : value(value) {}
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+    void debugPrint(const std::string &prefix, std::ostream &os) const override {
         os << prefix << "BoolNode( value: " << value << ")\n";
     }
 };
@@ -185,14 +209,22 @@ public:
     }
 
     [[nodiscard]] std::string getDescription() const override {
-        return "name: " + name + "\nisArray: " + std::to_string(isArray);
+        return "name = " + name + "\nisArray = " + std::to_string(isArray);
+    }
+
+    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+        auto res = std::vector<ASTNode *>(0);
+        if (isArray) {
+            res.emplace_back(arraySize.get());
+        }
+        return res;
     }
 
     explicit TypeNode(std::string name) : name(std::move(name)) {}
 
     TypeNode(std::string name, IntegerNode *&size) : name(std::move(name)), arraySize(size) {}
 
-    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+    void debugPrint(const std::string &prefix, std::ostream &os) const override {
         os << prefix << "TypeNode( name: " << name << ", isArray: " << isArray << ")\n";
     }
 };
@@ -207,7 +239,11 @@ public:
     }
 
     [[nodiscard]] std::string getDescription() const override {
-        return "name: " + name;
+        return "name = " + name;
+    }
+
+    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+        return std::vector<ASTNode *>(0);
     }
 
     explicit IdentifierNode(std::string name) : name(std::move(name)) {}
@@ -215,7 +251,7 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+    void debugPrint(const std::string &prefix, std::ostream &os) const override {
         os << prefix << "IdentifierNode( name: " << name << ")\n";
     }
 };
@@ -231,7 +267,14 @@ public:
     }
 
     [[nodiscard]] std::string getDescription() const override {
-        return "op: " + std::to_string(op);
+        return "op = " + std::to_string(op);
+    }
+
+    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+        auto res = std::vector<ASTNode *>(0);
+        res.emplace_back(leftExpr.get());
+        res.emplace_back(rightExpr.get());
+        return res;
     }
 
     BinaryOperatorNode(ExpressionNode *left, int &op, ExpressionNode *right) : op(op) {
@@ -241,7 +284,7 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+    void debugPrint(const std::string &prefix, std::ostream &os) const override {
         os << prefix << "BinaryOperatorNode( op: " << op << ")\n";
         os << prefix << " LeftExpr:\n";
         leftExpr->debugPrint(prefix + "  ", os);
@@ -264,6 +307,17 @@ public:
         return "";
     }
 
+    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+        auto res = std::vector<ASTNode *>(0);
+        res.emplace_back(id.get());
+        if (args) {
+            for (auto i = 0; i < args->size(); i++) {
+                res.emplace_back((*args)[i].get());
+            }
+        }
+        return res;
+    }
+
     explicit FunctionCallNode(IdentifierNode *id) : id(shared_ptr<IdentifierNode>(id)), args(nullptr) {}
 
     FunctionCallNode(IdentifierNode *id, ExpressionList *args) : id(shared_ptr<IdentifierNode>(id)),
@@ -271,7 +325,7 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+    void debugPrint(const std::string &prefix, std::ostream &os) const override {
         os << prefix << "FunctionCallNode\n";
         os << prefix << " id:\n";
         id->debugPrint(prefix + "  ", os);
@@ -297,6 +351,13 @@ public:
         return "";
     }
 
+    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+        auto res = std::vector<ASTNode *>(0);
+        res.emplace_back(id.get());
+        res.emplace_back(expr.get());
+        return res;
+    }
+
     AssignmentNode(IdentifierNode *id, ExpressionNode *expr) {
         this->id = shared_ptr<IdentifierNode>(id);
         this->expr = shared_ptr<ExpressionNode>(expr);
@@ -307,7 +368,7 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+    void debugPrint(const std::string &prefix, std::ostream &os) const override {
         os << prefix << "AssignmentNode\n";
         os << prefix << " id:\n";
         id->debugPrint(prefix + "  ", os);
@@ -331,6 +392,13 @@ public:
         return "";
     }
 
+    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+        auto res = std::vector<ASTNode *>(0);
+        res.emplace_back(id.get());
+        res.emplace_back(index.get());
+        return res;
+    }
+
     ArrayIndexNode(IdentifierNode *id, ExpressionNode *index) {
         this->id = shared_ptr<IdentifierNode>(id);
         this->index = shared_ptr<ExpressionNode>(index);
@@ -338,7 +406,7 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+    void debugPrint(const std::string &prefix, std::ostream &os) const override {
         os << prefix << "ArrayIndexNode\n";
         os << prefix << " id:\n";
         id->debugPrint(prefix + "  ", os);
@@ -361,12 +429,19 @@ public:
         return "";
     }
 
+    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+        auto res = std::vector<ASTNode *>(0);
+        res.emplace_back(element.get());
+        res.emplace_back(expr.get());
+        return res;
+    }
+
     ArrayIndexAssignmentNode(ArrayIndexNode *element, ExpressionNode *expr) : element(
             shared_ptr<ArrayIndexNode>(element)), expr(shared_ptr<ExpressionNode>(expr)) {}
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+    void debugPrint(const std::string &prefix, std::ostream &os) const override {
         os << prefix << "ArrayIndexAssignmentNode\n";
         os << prefix << " element:\n";
         element->debugPrint(prefix + "  ", os);
@@ -388,11 +463,19 @@ public:
         return "";
     }
 
+    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+        auto res = std::vector<ASTNode *>(0);
+        for (auto &stat: statements) {
+            res.emplace_back(stat.get());
+        }
+        return res;
+    }
+
     BlockNode() = default;
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+    void debugPrint(const std::string &prefix, std::ostream &os) const override {
         os << prefix << "BlockNode\n";
         os << prefix << " statements:\n";
         for (auto &stat: statements) {
@@ -415,6 +498,16 @@ public:
         return "";
     }
 
+    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+        auto res = std::vector<ASTNode *>(0);
+        res.emplace_back(type.get());
+        res.emplace_back(id.get());
+        if (assignmentExpr) {
+            res.emplace_back(assignmentExpr.get());
+        }
+        return res;
+    }
+
     VariableDeclarationNode(TypeNode *type, IdentifierNode *id) : type(shared_ptr<TypeNode>(type)),
                                                                   id(shared_ptr<IdentifierNode>(id)),
                                                                   assignmentExpr(nullptr) {}
@@ -426,7 +519,7 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+    void debugPrint(const std::string &prefix, std::ostream &os) const override {
         os << prefix << "VariableDeclarationNode\n";
         os << prefix << " type:\n";
         type->debugPrint(prefix + "  ", os);
@@ -451,13 +544,19 @@ public:
         return "";
     }
 
+    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+        auto res = std::vector<ASTNode *>(0);
+        res.emplace_back(expr.get());
+        return res;
+    }
+
     explicit ExpressionStatementNode(ExpressionNode *expr) {
         this->expr = shared_ptr<ExpressionNode>(expr);
     }
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+    void debugPrint(const std::string &prefix, std::ostream &os) const override {
         os << prefix << "ExpressionStatementNode\n";
         os << prefix << " expr:\n";
         expr->debugPrint(prefix + "  ", os);
@@ -481,6 +580,23 @@ public:
         return "";
     }
 
+    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+        auto res = std::vector<ASTNode *>(0);
+        if (type) {
+            res.emplace_back(type.get());
+        }
+        res.emplace_back(id.get());
+        if (args) {
+            for (auto i = 0; i < args->size(); i++) {
+                res.emplace_back((*args)[i].get());
+            }
+        }
+        if (block) {
+            res.emplace_back(block.get());
+        }
+        return res;
+    }
+
     FunctionDeclarationNode(TypeNode *type, IdentifierNode *id, VariableList *args, BlockNode *block,
                             bool external = false) : type(shared_ptr<TypeNode>(type)),
                                                      id(shared_ptr<IdentifierNode>(id)),
@@ -489,7 +605,7 @@ public:
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+    void debugPrint(const std::string &prefix, std::ostream &os) const override {
         os << prefix << "FunctionDeclarationNode\n";
 
         os << prefix << " type:\n";
@@ -510,10 +626,10 @@ public:
         }
 
         os << prefix << " block:\n";
-        if(block){
+        if (block) {
             block->debugPrint(prefix + "  ", os);
-        }else{
-            os<<prefix<<"  NULL\n";
+        } else {
+            os << prefix << "  NULL\n";
         }
     }
 
@@ -534,13 +650,23 @@ public:
         return "";
     }
 
+    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+        auto res = std::vector<ASTNode *>(0);
+        res.emplace_back(condition.get());
+        res.emplace_back(trueBlock.get());
+        if (falseBlock) {
+            res.emplace_back(falseBlock.get());
+        }
+        return res;
+    }
+
     IfStatementNode(ExpressionNode *condition, BlockNode *trueBlock, BlockNode *falseBlock) : condition(
             shared_ptr<ExpressionNode>(condition)), trueBlock(shared_ptr<BlockNode>(trueBlock)), falseBlock(
             shared_ptr<BlockNode>(falseBlock)) {}
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+    void debugPrint(const std::string &prefix, std::ostream &os) const override {
         os << prefix << "IfStatementNode\n";
         os << prefix << " condition:\n";
         condition->debugPrint(prefix + "  ", os);
@@ -568,12 +694,19 @@ public:
         return "";
     }
 
+    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+        auto res = std::vector<ASTNode *>(0);
+        res.emplace_back(condition.get());
+        res.emplace_back(block.get());
+        return res;
+    }
+
     WhileStatementNode(ExpressionNode *condition, BlockNode *block) : condition(shared_ptr<ExpressionNode>(condition)),
                                                                       block(shared_ptr<BlockNode>(block)) {}
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+    void debugPrint(const std::string &prefix, std::ostream &os) const override {
         os << prefix << "WhileStatementNode\n";
         os << prefix << " condition:\n";
         condition->debugPrint(prefix + "  ", os);
@@ -595,11 +728,17 @@ public:
         return "";
     }
 
+    [[nodiscard]] virtual std::vector<ASTNode *> getChildren() const override {
+        auto res = std::vector<ASTNode *>(0);
+        res.emplace_back(expr.get());
+        return res;
+    }
+
     explicit ReturnStatementNode(ExpressionNode *expr) : expr(shared_ptr<ExpressionNode>(expr)) {}
 
     ValuePtr generateCode(CodeGenerationContext &context) const override;
 
-    void debugPrint(const std::string &prefix, std::ostream& os) const override {
+    void debugPrint(const std::string &prefix, std::ostream &os) const override {
         os << prefix << "ReturnStatementNode\n";
         os << prefix << " expr:\n";
         if (expr) {

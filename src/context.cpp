@@ -36,7 +36,7 @@ using std::vector;
 using llvm::LLVMContext;
 
 
-void CodeGenerationContext::generateCode(BlockNode *blockNode, const string& filename) {
+void CodeGenerationContext::generateCode(BlockNode *blockNode, const string &filename) {
 
     Log::raiseMessage("Start to generate LLVM IR", std::cout);
 
@@ -113,27 +113,34 @@ void CodeGenerationContext::exportToObj(const string &filename) {
 
 }
 
-void writeLabel(ASTNode *node, std::string &umlStr) {
-    umlStr += "object " + node->umlName + "\n";
+std::string writeObject(ASTNode *node) {
+    std::string umlStr = "object " + node->umlName + "{\n" + node->getDescription() + "\n}\n";
+    Log::raiseMessage("current label: " + umlStr, std::cout);
     for (auto child : node->getChildren()) {
-        writeLabel(child, umlStr);
+        umlStr += writeObject(child);
     }
+    return umlStr;
 }
 
-void writeRelation(ASTNode *node, std::string &umlStr) {
+std::string writeRelation(ASTNode *node) {
+    std::string umlStr = "";
     if (node->parent) {
         umlStr += node->umlName + " <|-- " + node->parent->umlName + "\n";
     }
     for (auto child : node->getChildren()) {
-        writeRelation(child, umlStr);
+        umlStr += writeRelation(child);
     }
+    return umlStr;
 }
 
 void CodeGenerationContext::drawAST(BlockNode *blockNode, const string &filename) {
     std::string umlStr = "@startuml\n";
+    Log::raiseMessage("start fill name", std::cout);
     fillInParentAndName(blockNode);
-    writeLabel(blockNode, umlStr);
-    writeRelation(blockNode, umlStr);
+    Log::raiseMessage("start write label", std::cout);
+    umlStr += writeObject(blockNode);
+    Log::raiseMessage("start write relation", std::cout);
+    umlStr += writeRelation(blockNode);
 //    for (auto iter = GraphTraits<BlockNode *>::nodes_begin(blockNode);
 //         iter != GraphTraits<BlockNode *>::nodes_end(blockNode); ++iter) {
 //        umlStr += "object " + (*iter)->umlName + "\n";
@@ -152,7 +159,10 @@ void CodeGenerationContext::drawAST(BlockNode *blockNode, const string &filename
 }
 
 int CodeGenerationContext::fillInParentAndName(ASTNode *node, int index) {
+    Log::raiseMessage("start get current name", std::cout);
     node->umlName = node->getLabel() + std::to_string(index);
+    Log::raiseMessage("current name: " + node->getLabel() + std::to_string(index), std::cout);
+    Log::raiseMessage("current children number: " + std::to_string(node->getChildrenNumber()), std::cout);
     for (auto child : node->getChildren()) {
         child->parent = node;
         index = fillInParentAndName(child, index + 1) + 1;

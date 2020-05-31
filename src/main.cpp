@@ -26,10 +26,10 @@ extern BlockNode *programBlock;
 
 using namespace std;
 
-void showHelp(){
-    std::cout<<"Usage: clang-- -i [input filename] -o [output obj filename] -d [ast filename] -ol [ir filename]\n";
-    std::cout<<"\nOptions:\n";
-    std::cout<<"-h\tShow this help\n\n";
+void showHelp() {
+    std::cout << "Usage: clang-- -i [input filename] -o [output obj filename] -d [ast filename] -ol [ir filename]\n";
+    std::cout << "\nOptions:\n";
+    std::cout << "-h\tShow this help\n\n";
 }
 
 int main(int argc, char **argv) {
@@ -41,9 +41,8 @@ int main(int argc, char **argv) {
     char *filename;
     string outputName = "a.o";
     string irFilename = "ir.ll";
-    ofstream file;
 
-    if(argc == 1){
+    if (argc == 1) {
         showHelp();
         return 0;
     }
@@ -64,33 +63,33 @@ int main(int argc, char **argv) {
             assert(i < argc);
             astName = string(argv[i]);
             printAst = true;
-            file.open(astName, ios::out);
         } else if (strcmp(argv[i], "-v") == 0) {
             std::cout << "version 1.0.0-Beta\n";
-        }else if(strcmp(argv[i], "-ol") == 0){
+        } else if (strcmp(argv[i], "-ol") == 0) {
             i++;
             assert(i < argc);
             irFilename = string(argv[i]);
-        }else if (strcmp(argv[i], "-h"))
-        {
+        } else if (strcmp(argv[i], "-h")) {
             showHelp();
             return 0;
-        }else{
-            std::cout<<"Undefined args\n";
+        } else {
+            std::cout << "Undefined args\n";
             showHelp();
             return 0;
         }
-        
+
     }
 
     if (yyin != nullptr) {
         yyparse();
-        if(printAst){
-            programBlock->debugPrint("", file);
-            file.close();
-        }
         CodeGenerationContext maincontext;
-//        maincontext.drawAST(programBlock, astName);
+        if (printAst) {
+//            ofstream file;
+//            file.open(astName, ios::out);
+//            programBlock->debugPrint("", file);
+//            file.close();
+            maincontext.drawAST(programBlock, astName);
+        }
         maincontext.generateCode(programBlock, irFilename);
         maincontext.exportToObj(outputName);
 

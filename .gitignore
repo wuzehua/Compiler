@@ -39,6 +39,7 @@
 # Graph
 *.dot
 *.png
+test/*.puml
 
 #macOS
 .DS_Store

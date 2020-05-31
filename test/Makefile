@@ -13,13 +13,13 @@ io.o: io.c
 	gcc -c $< -o $@
 
 test2.o: test2.cmm
-	./clang-- -i $< -o $@
+	./clang-- -i $< -o $@ -d test2.puml
 
 test4.o: test4.cmm
-	./clang-- -i $< -o $@
+	./clang-- -i $< -o $@ -d test4.puml
 
 test6.o: test6.cmm
-	./clang-- -i $< -o $@
+	./clang-- -i $< -o $@ -d test6.puml
 
 clean:
 	$(RM) *.o main test2 test4 test6 *.ll
