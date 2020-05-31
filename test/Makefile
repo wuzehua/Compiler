@@ -22,7 +22,7 @@ test6.o: test6.cmm
 	./clang-- -i $< -o $@ -d test6.puml
 
 clean:
-	$(RM) *.o main test2 test4 test6 *.ll
+	$(RM) *.o main test2 test4 test6 *.ll *.puml
 
 test2: $(TEST2_OBJ)
 	gcc $(TEST2_OBJ) -o $@.elf
