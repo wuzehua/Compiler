@@ -1,0 +1,12 @@
+extern int gui(double r, double g, double b);
+extern double inputDouble();
+
+main(){
+	double r;
+	double g;
+	double b;
+	r = inputDouble();
+	g = inputDouble();
+	b = inputDouble();
+	gui(r, g, b);
+}
