@@ -56,6 +56,7 @@ int main(int argc, char **argv) {
     if (yyin != nullptr) {
         yyparse();
 
+        programBlock->debugPrint("");
         CodeGenerationContext maincontext;
 //        maincontext.drawAST(programBlock, astName);
         maincontext.generateCode(programBlock);
