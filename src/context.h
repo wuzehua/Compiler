@@ -216,7 +216,7 @@ public:
 
     void generateCode(BlockNode *blockNode, const string& filename);
 
-    void exportToObj(const string &filename);
+    void exportToObj(const string &filename) const;
 
 
 };

@@ -57,7 +57,7 @@ void CodeGenerationContext::generateCode(BlockNode *blockNode, const string &fil
 }
 
 //From llvm.org
-void CodeGenerationContext::exportToObj(const string &filename) {
+void CodeGenerationContext::exportToObj(const string &filename) const {
     InitializeAllTargetInfos();
     InitializeAllTargets();
     InitializeAllTargetMCs();
@@ -122,7 +122,7 @@ std::string writeObject(ASTNode *node) {
 }
 
 std::string writeRelation(ASTNode *node) {
-    std::string umlStr = "";
+    std::string umlStr;
     if (node->parent) {
         umlStr += node->umlName + " <|-- " + node->parent->umlName + "\n";
     }
