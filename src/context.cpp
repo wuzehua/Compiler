@@ -115,7 +115,6 @@ void CodeGenerationContext::exportToObj(const string &filename) {
 
 std::string writeObject(ASTNode *node) {
     std::string umlStr = "object " + node->umlName + "{\n" + node->getDescription() + "\n}\n";
-    Log::raiseMessage("current label: " + umlStr, std::cout);
     for (auto child : node->getChildren()) {
         umlStr += writeObject(child);
     }
@@ -135,11 +134,8 @@ std::string writeRelation(ASTNode *node) {
 
 void CodeGenerationContext::drawAST(BlockNode *blockNode, const string &filename) {
     std::string umlStr = "@startuml\n";
-    Log::raiseMessage("start fill name", std::cout);
     fillInParentAndName(blockNode);
-    Log::raiseMessage("start write label", std::cout);
     umlStr += writeObject(blockNode);
-    Log::raiseMessage("start write relation", std::cout);
     umlStr += writeRelation(blockNode);
 //    for (auto iter = GraphTraits<BlockNode *>::nodes_begin(blockNode);
 //         iter != GraphTraits<BlockNode *>::nodes_end(blockNode); ++iter) {
@@ -159,10 +155,7 @@ void CodeGenerationContext::drawAST(BlockNode *blockNode, const string &filename
 }
 
 int CodeGenerationContext::fillInParentAndName(ASTNode *node, int index) {
-    Log::raiseMessage("start get current name", std::cout);
     node->umlName = node->getLabel() + std::to_string(index);
-    Log::raiseMessage("current name: " + node->getLabel() + std::to_string(index), std::cout);
-    Log::raiseMessage("current children number: " + std::to_string(node->getChildrenNumber()), std::cout);
     for (auto child : node->getChildren()) {
         child->parent = node;
         index = fillInParentAndName(child, index + 1) + 1;
