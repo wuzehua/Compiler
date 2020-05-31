@@ -27,8 +27,13 @@ extern BlockNode *programBlock;
 using namespace std;
 
 void showHelp() {
-    std::cout << "Usage: clang-- -i [input filename] -o [output obj filename] -d [ast filename] -ol [ir filename]\n";
+    std::cout
+            << "Usage: clang-- -i [input filename] -o [output obj filename] -d [ast uml filename] -ol [ir filename]\n";
     std::cout << "\nOptions:\n";
+    std::cout << "-i\tThe src file to compile\n";
+    std::cout << "-o\tThe output obj file path\n";
+    std::cout << "-d\tEnable AST uml output, and set the AST uml file path, you need to use related software to open the uml file to get the picture\n";
+    std::cout << "-ol\tThe output obj file path\n";
     std::cout << "-h\tShow this help\n\n";
 }
 
