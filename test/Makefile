@@ -1,4 +1,4 @@
-all: test2 test4 test6
+all: test2 test4 test6 gui
 
 TEST2_OBJ = test2.o\
 			io.o\
